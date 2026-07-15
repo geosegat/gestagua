@@ -1,0 +1,11 @@
+node_modules
+# Segredos (apiKey, senha do banco) ficam no .env — NUNCA versionar.
+# Copie de .env.example e preencha localmente / na VPS.
+.env
+# artefatos de ambiente local
+banco_ativo.txt
+*.log
+# saida do build TypeScript (gerada por npm run build)
+dist/
+# build do frontend (gerado por npm run build em ../frontend)
+public/

@@ -1,0 +1,202 @@
+@import 'tailwindcss';
+
+/* ============================================================
+   Montserrat self-hosted — MESMOS arquivos do MVGI
+   (src/assets/fonts). Sem dependência de Google Fonts/rede
+   externa: funciona em VPS sem saída pra internet.
+   O MVGI só usa os cortes Medium (500) e SemiBold (600); as
+   faixas abaixo mapeiam 100–500 → Medium e 600–900 → SemiBold,
+   então 400/700 renderizam igual ao MVGI, sem bold sintético.
+   ============================================================ */
+@font-face {
+  font-family: 'Montserrat';
+  src:
+    url('./assets/fonts/Montserrat-Medium.woff2') format('woff2'),
+    url('./assets/fonts/Montserrat-Medium.woff') format('woff');
+  font-weight: 100 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Montserrat';
+  src:
+    url('./assets/fonts/Montserrat-SemiBold.woff2') format('woff2'),
+    url('./assets/fonts/Montserrat-SemiBold.woff') format('woff');
+  font-weight: 600 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ============================================================
+   Tokens FIXOS do design system (não mudam por marca)
+   ============================================================ */
+@theme {
+  /* mesma fonte do MVGI/Arvo (lá: self-hosted 500/600; aqui via Google Fonts) */
+  --font-sans: 'Montserrat', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Montserrat', ui-sans-serif, system-ui, sans-serif;
+
+  --color-paper: #f6f4ee;
+  --color-card: #ffffff;
+  --color-ink: #1d2b2e;
+  --color-ink-soft: #5c6f72;
+  --color-line: #e3ded2;
+
+  --color-ok: #128a6c;
+  --color-ok-bg: #ddf2ea;
+  --color-warn: #b05616;
+  --color-warn-bg: #fbe9da;
+  --color-bad: #b3403e;
+  --color-bad-bg: #f9e3e2;
+}
+
+/* ============================================================
+   Tokens de MARCA (white-label) — resolvem CSS variables em
+   runtime; o BrandingProvider troca os --brand-* no :root e o
+   produto inteiro recolore. `inline` mantém o var() no CSS final.
+   ============================================================ */
+@theme inline {
+  --color-brand: var(--brand-primary);
+  --color-brand-deep: var(--brand-primary-deep);
+  --color-brand-hover: var(--brand-primary-hover);
+  --color-brand-soft: var(--brand-primary-soft);
+  --color-on-brand: var(--brand-on-primary);
+  --color-accent: var(--brand-accent);
+  --color-accent-soft: var(--brand-accent-soft);
+
+  /* aliases legados — os componentes escritos com petrol/aqua
+     seguem a marca automaticamente */
+  --color-petrol: var(--brand-primary);
+  --color-petrol-deep: var(--brand-primary-deep);
+  --color-aqua: var(--brand-accent);
+  --color-aqua-soft: var(--brand-accent-soft);
+}
+
+/* Defaults da marca (Gestágua) — valem antes do JS aplicar o tema salvo */
+:root {
+  --brand-primary: #0c4a55;
+  --brand-primary-deep: #07333c;
+  --brand-primary-hover: #10606e;
+  --brand-primary-soft: #e3eef0;
+  --brand-on-primary: #ffffff;
+  --brand-accent: #16a3b5;
+  --brand-accent-soft: #d9f1f3;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  background: var(--color-paper);
+  /* Só o wash da marca no topo. Sem listras: o thead das tabelas é transparente
+     (efeito ARVO) e qualquer padrão repetido atravessaria a tira do cabeçalho,
+     preso à viewport e desalinhado das linhas da tabela. */
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%, color-mix(in srgb, var(--brand-accent) 10%, transparent), transparent);
+}
+
+/* ============================================================
+   Scrollbars da marca — seguem os --brand-* como o resto do
+   produto (o BrandingProvider troca essas vars no :root e a
+   barra recolore em runtime, sem JS extra). `.brand-scroll` em
+   superfícies claras; `-inverse` no drawer, que tem fundo da cor
+   primária. Aplicadas na classe (não em html) porque quem rola
+   são os containers: <main> do AppShell e <nav> do Drawer.
+   ============================================================ */
+.brand-scroll::-webkit-scrollbar,
+.brand-scroll-inverse::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.brand-scroll::-webkit-scrollbar-track,
+.brand-scroll-inverse::-webkit-scrollbar-track,
+.brand-scroll::-webkit-scrollbar-corner,
+.brand-scroll-inverse::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* setinhas de topo/base: só o Chromium as remove */
+.brand-scroll::-webkit-scrollbar-button,
+.brand-scroll-inverse::-webkit-scrollbar-button {
+  display: none;
+}
+
+/* borda transparente + padding-box afinam o polegar sem
+   diminuir a área de clique */
+.brand-scroll::-webkit-scrollbar-thumb,
+.brand-scroll-inverse::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  border-radius: 999px;
+  transition: background-color 0.15s ease;
+}
+
+.brand-scroll::-webkit-scrollbar-thumb {
+  background-color: color-mix(in srgb, var(--brand-primary) 38%, transparent);
+}
+.brand-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in srgb, var(--brand-primary) 62%, transparent);
+}
+.brand-scroll::-webkit-scrollbar-thumb:active {
+  background-color: var(--brand-primary);
+}
+
+.brand-scroll-inverse::-webkit-scrollbar-thumb {
+  background-color: color-mix(in srgb, var(--brand-on-primary) 28%, transparent);
+}
+.brand-scroll-inverse::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in srgb, var(--brand-on-primary) 45%, transparent);
+}
+.brand-scroll-inverse::-webkit-scrollbar-thumb:active {
+  background-color: color-mix(in srgb, var(--brand-on-primary) 60%, transparent);
+}
+
+/* Firefox. Fica no @supports porque declarar scrollbar-color
+   fora dele desligaria os ::-webkit-scrollbar acima no Chromium. */
+@supports not selector(::-webkit-scrollbar-thumb) {
+  .brand-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--brand-primary) 45%, transparent) transparent;
+  }
+  .brand-scroll-inverse {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--brand-on-primary) 32%, transparent) transparent;
+  }
+}
+
+/* animações */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes drip {
+  0%,
+  100% {
+    transform: rotate(-45deg) translateY(0);
+  }
+  50% {
+    transform: rotate(-45deg) translateY(5px);
+  }
+}
+
+.animate-rise {
+  animation: rise 0.5s ease both;
+}

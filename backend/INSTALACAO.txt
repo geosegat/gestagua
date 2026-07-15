@@ -1,0 +1,87 @@
+============================================================
+ INSTALACAO DA API GESTAGUA NA VPS - PASSO A PASSO
+============================================================
+
+PASSO 0 - Node.js (se "node -v" nao funcionar na VPS)
+  Baixar o Node LTS em https://nodejs.org (botao verde, LTS),
+  instalar com tudo padrao (next, next, finish).
+  Fechar e reabrir o PowerShell e conferir:  node -v
+
+PASSO 1 - Copiar a pasta
+  Copiar a pasta "api-prefeitura" inteira para:
+     C:\arvo-sync\api-prefeitura
+
+PASSO 2 - Criar o .env real
+  No PowerShell:
+     Copy-Item C:\arvo-sync\api-prefeitura\.env.example C:\arvo-sync\api-prefeitura\.env
+     notepad C:\arvo-sync\api-prefeitura\.env
+  Preencher:
+     - API_KEY: gerar uma chave no PowerShell com
+         [guid]::NewGuid().ToString("N") + [guid]::NewGuid().ToString("N")
+       copiar o resultado pra dentro do .env e GUARDAR
+       (eh essa chave que sera entregue a prefeitura)
+     - DB_PASSWORD: senha do postgres local
+     - POINTER_FILE e LOG_FILE: descomentar e apontar pros caminhos
+       reais da VPS (o clone-banco.ps1 escreve o banco_ativo.txt fora
+       da pasta do app):
+         POINTER_FILE=C:\arvo-sync\banco_ativo.txt
+         LOG_FILE=C:\arvo-sync\logs\api.log
+
+PASSO 3 - Proteger o .env (tem senha dentro)
+     icacls "C:\arvo-sync\api-prefeitura\.env" /inheritance:r /grant:r "Administrators:F" "SYSTEM:F"
+
+PASSO 4 - Instalar dependencias e compilar
+     cd C:\arvo-sync\api-prefeitura
+     npm install
+     npm run build
+  (o codigo eh TypeScript; "npm run build" gera a pasta dist\ que
+   roda em producao. Rode o build de novo a cada atualizacao do codigo.)
+
+PASSO 5 - Testar manualmente
+     cd C:\arvo-sync\api-prefeitura
+     npm start
+  (roda "node dist\server.js"; deixa rodando; deve aparecer
+   "API Gestagua escutando na porta 8080".
+   IMPORTANTE: sempre inicie A PARTIR da pasta do app - a API procura
+   o .env, o banco_ativo.txt e a pasta public\ no diretorio de trabalho.)
+  Em OUTRA janela do PowerShell:
+     Invoke-RestMethod http://localhost:8080/health
+     Invoke-RestMethod -Headers @{ "x-api-key" = "SUA_CHAVE" } "http://localhost:8080/projetos?limit=5"
+  Deve voltar o JSON com os projetos do Gestagua.
+  Teste de seguranca (deve dar erro 401):
+     Invoke-RestMethod "http://localhost:8080/projetos"
+  Para parar o teste: Ctrl+C na janela do node.
+
+PASSO 6 - Deixar a API sempre ligada (inicia com o Windows)
+  O "cmd /c cd /d ..." garante que a tarefa rode COM O DIRETORIO DE
+  TRABALHO na pasta do app (senao o Windows usa system32 e a API nao
+  acha o .env / banco_ativo.txt / public):
+     schtasks /create /tn "ArvoApiPrefeitura" /tr "cmd /c cd /d C:\arvo-sync\api-prefeitura && \"C:\Program Files\nodejs\node.exe\" dist\server.js" /sc onstart /ru SYSTEM /rl HIGHEST
+     schtasks /run /tn "ArvoApiPrefeitura"
+  Conferir que subiu:
+     Invoke-RestMethod http://localhost:8080/health
+  Log da API: C:\arvo-sync\logs\api.log
+
+PASSO 7 - Abrir o firewall (SO quando for liberar pra prefeitura)
+  Ideal: restringir ao IP da prefeitura (trocar X.X.X.X):
+     New-NetFirewallRule -DisplayName "API Gestagua" -Direction Inbound -Protocol TCP -LocalPort 8080 -RemoteAddress X.X.X.X -Action Allow
+  Se a prefeitura nao tiver IP fixo, liberar geral (a API key protege):
+     New-NetFirewallRule -DisplayName "API Gestagua" -Direction Inbound -Protocol TCP -LocalPort 8080 -Action Allow
+
+------------------------------------------------------------
+ IMPORTANTE - HTTPS
+------------------------------------------------------------
+ A API nasce em HTTP puro. Antes de entregar pra prefeitura
+ usar em producao de verdade, colocar HTTPS na frente
+ (um dominio apontando pra VPS + Caddy ou IIS com certificado).
+ Sem HTTPS, a API key trafega legivel na rede.
+ Falar com o Claude pra montar essa parte quando tiver dominio.
+
+------------------------------------------------------------
+ COMANDOS DO DIA A DIA
+------------------------------------------------------------
+ Ver log da API:        Get-Content C:\arvo-sync\logs\api.log -Tail 30
+ Reiniciar a API:       taskkill /f /im node.exe
+                        schtasks /run /tn "ArvoApiPrefeitura"
+ Testar rapidamente:    Invoke-RestMethod http://localhost:8080/health
+============================================================
