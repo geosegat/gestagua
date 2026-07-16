@@ -1,17 +1,16 @@
 import { motion } from 'framer-motion';
-import { Activity, Droplets, FolderKanban, MapPin } from 'lucide-react';
+import { Activity, Droplets, FolderKanban } from 'lucide-react';
 import { stagger } from '../lib/motion';
 import { StatCard } from './StatCard';
 
 interface StatsProps {
   total: number | null;
   executionLabel: string;
-  municipalities: number;
   springs: number;
 }
 
-/** Resumo do topo da aba Projetos: os mesmos cards da Visão Geral. */
-export default function Stats({ total, executionLabel, municipalities, springs }: StatsProps) {
+/** Resumo do topo da aba Projetos. */
+export default function Stats({ total, executionLabel, springs }: StatsProps) {
   return (
     <motion.div
       variants={stagger}
@@ -33,7 +32,6 @@ export default function Stats({ total, executionLabel, municipalities, springs }
         tone="ok"
         hint="Em execução sobre o total da página carregada"
       />
-      <StatCard icon={MapPin} value={municipalities} label="Municípios (página)" tone="accent" />
       <StatCard icon={Droplets} value={springs} label="Nascentes (página)" tone="accent" />
     </motion.div>
   );

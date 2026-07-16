@@ -19,6 +19,8 @@ const apiOnly = (target: string) => ({
   },
 });
 
+console.log('Vite config carregado');
+
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   build: {

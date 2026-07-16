@@ -19,12 +19,6 @@ const STATUS_OPTIONS: FilterOption[] = [
   { value: 'arquivado', label: 'Arquivados' },
 ];
 
-function city(project: Project): string {
-  const { municipality, state } = project.location;
-  if (municipality && state) return `${municipality}, ${state}`;
-  return municipality || state || '—';
-}
-
 function startYear(project: Project): string {
   const year = project.contractIssueDate?.slice(0, 4);
   return year && /^\d{4}$/.test(year) ? year : '—';
@@ -75,12 +69,6 @@ const COLUMNS: Column<Project>[] = [
     cell: (project) => <TwoLineCell top={project.macroStage || '—'} base={project.stage} />,
   },
   {
-    header: 'Cidade',
-    tdClassName: 'whitespace-nowrap',
-    hideBelow: 'sm',
-    cell: city,
-  },
-  {
     header: 'Bacia Hidrográfica',
     tdClassName: 'max-w-[180px] truncate text-ink-soft',
     hideBelow: 'md',
@@ -128,9 +116,6 @@ export default function ProjectsPage() {
 
   // métricas da página carregada (mesma leitura do resumo antigo)
   const pageItems = list.items;
-  const municipalities = new Set(
-    pageItems.map((project) => project.location.municipality).filter(Boolean),
-  ).size;
   const springs = pageItems.reduce(
     (total, project) => total + (project.property.totalSprings ?? 0),
     0,
@@ -163,7 +148,6 @@ export default function ProjectsPage() {
       <Stats
         total={isFiltering ? overallTotal : list.total}
         executionLabel={executionLabel}
-        municipalities={municipalities}
         springs={springs}
       />
 
