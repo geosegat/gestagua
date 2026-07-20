@@ -1,8 +1,9 @@
 import ApiErrorBanner from '../components/ApiErrorBanner';
 import DataTableCard, { type Column } from '../components/DataTableCard';
-import { getProperties, type Property } from '../lib/api';
+import type { PageParams, PropertiesResponse, Property } from '../types';
 import { formatNumber } from '../lib/format';
 import { usePaginatedList } from '../lib/usePaginatedList';
+import { useGetPropertiesQuery } from '../services/gestaguaApi';
 
 // tamanhos de página do seletor (o backend limita em 100)
 const PAGE_SIZES = [15, 50, 100];
@@ -42,14 +43,16 @@ const COLUMNS: Column<Property>[] = [
 ];
 
 export default function PropertiesPage() {
-  const list = usePaginatedList<Property>(async (params) => {
-    const response = await getProperties(params);
-    return {
+  const list = usePaginatedList<PropertiesResponse, Property, PageParams>(
+    useGetPropertiesQuery,
+    (params) => params,
+    (response) => ({
       items: response.properties,
       pagination: response.pagination,
       dataSource: response.dataSource,
-    };
-  }, PAGE_SIZES[0]);
+    }),
+    PAGE_SIZES[0],
+  );
 
   return (
     <>

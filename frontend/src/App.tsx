@@ -3,8 +3,9 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { BrandingProvider } from './branding/BrandingContext';
 import PageContainer from './components/PageContainer';
 import AppShell from './components/shell/AppShell';
-import { getKey } from './lib/api';
-import { ALL_NAV_ITEMS, type NavItem } from './navigation/config';
+import ProjectLayout from './components/project/ProjectLayout';
+import { getKey } from './lib/auth';
+import { ALL_NAV_ITEMS } from './navigation/config';
 import LoginPage from './pages/LoginPage';
 import MobilizationsPage from './pages/MobilizationsPage';
 import PersonalizationPage from './pages/PersonalizationPage';
@@ -12,8 +13,12 @@ import PlaceholderPage from './pages/PlaceholderPage';
 import ProducersPage from './pages/ProducersPage';
 import ProgramsPage from './pages/ProgramsPage';
 import ProjectsPage from './pages/ProjectsPage';
+import ProjectInformationPage from './pages/ProjectInformationPage';
+import ProjectInstallmentsPage from './pages/ProjectInstallmentsPage';
+import ProjectStagesPage from './pages/ProjectStagesPage';
 import PropertiesPage from './pages/PropertiesPage';
 import OverviewPage from './pages/Overview';
+import type { NavItem } from './types';
 
 /** Sem chave salva → tela de login. (As páginas ainda tratam 401 em uso.) */
 function RequireAuth({ children }: { children: ReactElement }) {
@@ -70,6 +75,12 @@ export default function App() {
             }
           >
             <Route index element={<Navigate to="/visao-geral" replace />} />
+            <Route path="/projetos/:projectId" element={<ProjectLayout />}>
+              <Route index element={<Navigate to="informacoes" replace />} />
+              <Route path="informacoes" element={<ProjectInformationPage />} />
+              <Route path="atividades" element={<ProjectStagesPage />} />
+              <Route path="parcelas-produtor" element={<ProjectInstallmentsPage />} />
+            </Route>
             {ALL_NAV_ITEMS.map((item) => (
               <Route
                 key={item.id}

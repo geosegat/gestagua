@@ -1,7 +1,18 @@
-import type { ProjectStatus } from './api';
+import type { ProjectStatus } from '../types';
 
 export function formatNumber(n: number | null | undefined): string {
   return n === null || n === undefined ? '—' : Number(n).toLocaleString('pt-BR');
+}
+
+export function formatCurrency(n: number | null | undefined): string {
+  return n === null || n === undefined
+    ? '—'
+    : Number(n).toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
 }
 
 export function formatDate(d: string | null | undefined): string {

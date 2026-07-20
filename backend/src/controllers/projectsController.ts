@@ -1,9 +1,19 @@
 import type { Request, Response } from 'express';
-import type { QueryResultRow } from 'pg';
 
 import config from '../config';
 import { getCurrentDb, getPool } from '../db';
-import { log } from '../log';
+import type {
+  ActivityProgressRow,
+  IdParams,
+  Project,
+  ProjectDetailRow,
+  ProjectListQuery,
+  ProjectRow,
+  TagRow,
+  TotalRow,
+} from '../types';
+import { parsePagination } from '../utils/pagination';
+import { UUID_RE } from '../utils/validation';
 
 export const STATUS_PT = {
   executing: 'em_execucao',
@@ -11,80 +21,9 @@ export const STATUS_PT = {
   archived: 'arquivado',
 } as const;
 
-type StatusOriginal = keyof typeof STATUS_PT;
-type TranslatedStatus = (typeof STATUS_PT)[StatusOriginal];
-
-export const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-interface ProjectRow extends QueryResultRow {
-  id: string;
-  contractNumber: string | null;
-  status: string;
-  contractIssuanceDate: string | Date | null;
-  contractSigned: boolean | null;
-  updatedAt: string | Date | null;
-  etapa_nome: string | null;
-  stage_name: string | null;
-  property_name: string | null;
-  community: string | null;
-  totalArea: number | string | null;
-  nativeVegetationArea: number | string | null;
-  totalSprings: number | null;
-  city: string | null;
-  state: string | null;
-  latitude: number | string | null;
-  longitude: number | string | null;
-  watershed_name: string | null;
-}
-
-interface TotalRow extends QueryResultRow {
-  total: number;
-}
-
-interface TagRow extends QueryResultRow {
-  name: string;
-}
-
-interface Project {
-  id: string;
-  contract: string | null;
-  status: string;
-  contractIssueDate: string | Date | null;
-  contractSigned: boolean | null;
-  updatedAt: string | Date | null;
-  macroStage: string | null;
-  stage: string | null;
-  property: {
-    name: string | null;
-    community: string | null;
-    totalAreaHa: number | string | null;
-    nativeVegetationAreaHa: number | string | null;
-    totalSprings: number | null;
-  };
-  location: {
-    municipality: string | null;
-    state: string | null;
-    latitude: number | string | null;
-    longitude: number | string | null;
-  };
-  watershed: string | null;
-}
-
-interface ListarQuery {
-  page?: string;
-  limit?: string;
-  status?: string;
-  busca?: string;
-}
-
-interface DetalheParams {
-  id: string;
-}
-
-function translateStatus(status: string): TranslatedStatus | string {
+function translateStatus(status: string): string {
   if (status in STATUS_PT) {
-    return STATUS_PT[status as StatusOriginal];
+    return STATUS_PT[status as keyof typeof STATUS_PT];
   }
 
   return status;
@@ -117,7 +56,6 @@ function mapProject(row: ProjectRow): Project {
   };
 }
 
-// JOINs + filtro fixo do programa.
 const BASE_FROM = `
   FROM projects p
   LEFT JOIN stages s      ON s.id  = p."stageId"
@@ -141,24 +79,79 @@ const BASE_SELECT = `
   ${BASE_FROM}
 `;
 
-function getErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
+const DETAIL_SELECT = `
+  SELECT p.id, p."contractNumber", p.status, p."contractIssuanceDate",
+         p."contractSigned", p."updatedAt", p."portalId", p."revisionNumber",
+         p.questionnaire, p."reasonForRevision", p.action,
+         p."signatureLocation", p.notes,
+         s.id AS stage_id, s.name AS stage_name,
+         s.description AS stage_description,
+         s."expectedDuration" AS stage_expected_duration,
+         s."maximumDuration" AS stage_maximum_duration,
+         s."shouldNotify" AS stage_should_notify,
+         e.nome AS etapa_nome,
+         pr.id AS property_id, pr.name AS property_name,
+         pr."propertyCode" AS property_code,
+         pr."ruralEnvironmentalRegistry" AS rural_environmental_registry,
+         pr."accessRoute" AS access_route,
+         pr."ownershipNature"::text AS ownership_nature,
+         pr."fiscalModules" AS fiscal_modules,
+         pr."totalArea", pr."nativeVegetationArea", pr."totalSprings",
+         pr.community,
+         a.city, a.state, a.latitude, a.longitude,
+         w.name AS watershed_name,
+         pg.id AS program_id, pg.name AS program_name,
+         responsible.name AS responsible_name,
+         producer_user.name AS producer_name
+  FROM projects p
+  LEFT JOIN stages s ON s.id = p."stageId"
+  LEFT JOIN etapas e ON e.id = s."etapaId"
+  LEFT JOIN properties pr ON pr.id = p."propertyId"
+  LEFT JOIN addresses a ON a.id = pr."addressId"
+  LEFT JOIN watersheds w ON w.id = pr."watershedId"
+  LEFT JOIN programs pg ON pg.id = p."programId"
+  LEFT JOIN users responsible ON responsible.id = p."responsibleId"
+  LEFT JOIN producers producer ON producer.id = pr."producerId"
+  LEFT JOIN users producer_user ON producer_user.id = producer."userId"
+  WHERE p."programId" = $1
+    AND p."deletedAt" IS NULL
+    AND p.id = $2
+`;
+
+function isActivityComplete(activity: ActivityProgressRow): boolean {
+  switch (activity.type) {
+    case 'checkbox':
+      return activity.checked === true || activity.checkedById !== null;
+    case 'text':
+      return Boolean(activity.text?.trim());
+    case 'date':
+      return activity.activityDate !== null;
+    case 'upload':
+      return activity.documentId !== null;
+    default:
+      return false;
+  }
 }
 
-// GET /projetos — lista paginada
+function getActivityProgress(activities: ActivityProgressRow[]) {
+  const measurable = activities.filter((activity) => activity.type !== 'list');
+  const completed = measurable.filter(isActivityComplete).length;
+
+  return {
+    progress:
+      measurable.length === 0
+        ? 0
+        : Math.round((completed / measurable.length) * 100),
+    totalActivities: measurable.length,
+    completedActivities: completed,
+  };
+}
+
 export async function listar(
-  req: Request<object, object, object, ListarQuery>,
+  req: Request<object, object, object, ProjectListQuery>,
   res: Response,
 ): Promise<Response | void> {
-  try {
-    const page = Math.max(1, Number.parseInt(req.query.page ?? '', 10) || 1);
-
-    const limit = Math.min(
-      100,
-      Math.max(1, Number.parseInt(req.query.limit ?? '', 10) || 20),
-    );
-
-    const offset = (page - 1) * limit;
+    const { page, limit, offset } = parsePagination(req.query);
 
     const params: string[] = [config.gestaguaProgramId];
     let where = '';
@@ -167,7 +160,7 @@ export async function listar(
       const requestedStatus = req.query.status;
 
       const rawStatus = (
-        Object.keys(STATUS_PT) as StatusOriginal[]
+        Object.keys(STATUS_PT) as Array<keyof typeof STATUS_PT>
       ).find(
         (status) =>
           STATUS_PT[status] === requestedStatus ||
@@ -226,21 +219,12 @@ export async function listar(
       },
       projects: rowsQuery.rows.map(mapProject),
     });
-  } catch (error: unknown) {
-    log(`ERRO GET /projetos: ${getErrorMessage(error)}`);
-
-    return res.status(500).json({
-      erro: 'erro interno',
-    });
-  }
 }
 
-// GET /projetos/:id — detalhe
 export async function detalhe(
-  req: Request<DetalheParams>,
+  req: Request<IdParams>,
   res: Response,
 ): Promise<Response> {
-  try {
     const { id } = req.params;
 
     if (!UUID_RE.test(id)) {
@@ -252,10 +236,7 @@ export async function detalhe(
     const db = getPool();
     const params = [config.gestaguaProgramId, id];
 
-    const rowsQuery = await db.query<ProjectRow>(
-      `${BASE_SELECT} AND p.id = $2`,
-      params,
-    );
+    const rowsQuery = await db.query<ProjectDetailRow>(DETAIL_SELECT, params);
 
     const row = rowsQuery.rows[0];
 
@@ -273,18 +254,61 @@ export async function detalhe(
       [id],
     );
 
+    const activitiesQuery = row.stage_id
+      ? await db.query<ActivityProgressRow>(
+          `SELECT type, checked, text, "activityDate", "documentId", "checkedById"
+           FROM activities
+           WHERE "projectId" = $1
+             AND "stageId" = $2
+             AND "deletedAt" IS NULL`,
+          [id, row.stage_id],
+        )
+      : { rows: [] as ActivityProgressRow[] };
+
+    const stageProgress = getActivityProgress(activitiesQuery.rows);
+    const summary = mapProject(row);
+
     const project = {
-      ...mapProject(row),
+      ...summary,
+      portalId: row.portalId,
+      revisionNumber: row.revisionNumber,
+      questionnaire: row.questionnaire,
+      reasonForRevision: row.reasonForRevision,
+      action: row.action,
+      signatureLocation: row.signatureLocation,
+      notes: row.notes,
+      program: {
+        id: row.program_id,
+        name: row.program_name,
+      },
+      responsible: row.responsible_name
+        ? { name: row.responsible_name }
+        : null,
+      producer: row.producer_name ? { name: row.producer_name } : null,
+      property: {
+        ...summary.property,
+        id: row.property_id,
+        code: row.property_code,
+        ruralEnvironmentalRegistry: row.rural_environmental_registry,
+        accessRoute: row.access_route,
+        ownershipNature: row.ownership_nature,
+        fiscalModules: row.fiscal_modules,
+      },
+      currentStage: row.stage_id
+        ? {
+            id: row.stage_id,
+            name: row.stage_name,
+            macroStage: row.etapa_nome,
+            description: row.stage_description,
+            expectedDuration: row.stage_expected_duration,
+            maximumDuration: row.stage_maximum_duration,
+            shouldNotify: row.stage_should_notify,
+            ...stageProgress,
+          }
+        : null,
       tags: tagsQuery.rows.map((tag) => tag.name),
       dataSource: getCurrentDb(),
     };
 
     return res.json(project);
-  } catch (error: unknown) {
-    log(`ERRO GET /projetos/:id: ${getErrorMessage(error)}`);
-
-    return res.status(500).json({
-      erro: 'erro interno',
-    });
-  }
 }

@@ -8,24 +8,8 @@ import {
   Megaphone,
   Palette,
   Users,
-  type LucideIcon,
 } from 'lucide-react';
-import type { BrandingConfig } from '../branding/types';
-
-export interface NavItem {
-  id: string;
-  label: string;
-  icon: LucideIcon;
-  path: string;
-  /** Item que o admin não pode esconder (ex.: a própria Personalização). */
-  locked?: boolean;
-}
-
-export interface NavSection {
-  id: string;
-  title: string;
-  items: NavItem[];
-}
+import type { BrandingConfig, NavItem, NavSection } from '../types';
 
 /**
  * Menu do produto — dados, não código. Produto novo = outro array.

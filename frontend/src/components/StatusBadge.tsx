@@ -1,4 +1,4 @@
-import type { ProjectStatus } from '../lib/api';
+import type { ProjectStatus } from '../types';
 import { statusLabel } from '../lib/format';
 
 const STYLES: Record<string, string> = {

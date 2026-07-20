@@ -1,10 +1,12 @@
 import { ChevronsLeft, ChevronsRight, Droplets, LogOut, X } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import type { BrandingConfig } from '../../branding/types';
+import type { BrandingConfig, NavSection } from '../../types';
 import { useBranding } from '../../branding/BrandingContext';
-import { clearKey } from '../../lib/api';
-import { resolveNav, type NavSection } from '../../navigation/config';
+import { clearKey } from '../../lib/auth';
+import { gestaguaApi } from '../../services/gestaguaApi';
+import { useDispatch } from 'react-redux';
+import { resolveNav } from '../../navigation/config';
 
 const COLLAPSED_KEY = 'gestagua_drawer_collapsed';
 const W_OPEN = 272;
@@ -129,6 +131,7 @@ export default function Drawer({
 }) {
   const { branding } = useBranding();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const sections = resolveNav(branding);
 
   const [collapsed, setCollapsed] = useState(
@@ -138,7 +141,6 @@ export default function Drawer({
 
   // regra herdada do MVGI: aberto se fixado, ou se colapsado + mouse em cima
   const open = !collapsed || hovering;
-  const overlaying = collapsed && hovering;
 
   function togglePin() {
     const next = !collapsed;
@@ -149,6 +151,7 @@ export default function Drawer({
 
   function signOut() {
     clearKey();
+    dispatch(gestaguaApi.util.resetApiState());
     navigate('/login', { replace: true });
   }
 
@@ -199,18 +202,13 @@ export default function Drawer({
       {/* rail de desktop — some completamente abaixo de md, o overlay de
           mobile assume a navegação nesse ponto */}
       <div
-        className="relative hidden h-full shrink-0 transition-[width] duration-200 md:block"
-        style={{ width: collapsed ? W_RAIL : W_OPEN }}
+        className="hidden h-full shrink-0 overflow-hidden bg-brand text-on-brand transition-[width] duration-200 ease-out md:block"
+        style={{ width: open ? W_OPEN : W_RAIL }}
+        onMouseEnter={() => collapsed && setHovering(true)}
+        onMouseLeave={() => collapsed && setHovering(false)}
       >
         <aside
-          onMouseEnter={() => collapsed && setHovering(true)}
-          onMouseLeave={() => collapsed && setHovering(false)}
-          className={[
-            'absolute inset-y-0 left-0 z-40 flex flex-col overflow-hidden',
-            'bg-brand text-on-brand transition-[width] duration-200',
-            overlaying ? 'shadow-[8px_0_32px_-12px_rgba(0,0,0,.45)]' : '',
-          ].join(' ')}
-          style={{ width: open ? W_OPEN : W_RAIL }}
+          className="flex h-full w-full flex-col overflow-hidden"
         >
           <DrawerBody
             branding={branding}

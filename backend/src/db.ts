@@ -5,18 +5,42 @@ import config from './config';
 import { log } from './log';
 
 let currentDb: string | null = null;
+let currentSource: string | null = null;
 let pool: Pool | null = null;
 
 export function getPool(): Pool {
-  const db = fs.readFileSync(config.pointerFile, 'utf8').trim();
+  const connectionString = config.db.connectionString.trim();
 
-  if (!db) {
-    throw new Error('banco_ativo.txt vazio');
+  if (connectionString) {
+    if (!pool || currentSource !== connectionString) {
+      const oldPool = pool;
+      pool = new Pool({
+        connectionString,
+        max: 10,
+        idleTimeoutMillis: 30_000,
+      });
+      currentSource = connectionString;
+
+      try {
+        currentDb = decodeURIComponent(new URL(connectionString).pathname.slice(1));
+      } catch {
+        currentDb = 'DATABASE_URL';
+      }
+
+      log(`Conectando ao banco: ${currentDb}`);
+      if (oldPool) void oldPool.end().catch(() => undefined);
+    }
+
+    return pool;
   }
 
-  if (!pool || db !== currentDb) {
-    const oldPool = pool;
+  const db = fs.readFileSync(config.pointerFile, 'utf8').trim();
 
+  if (!db) throw new Error('banco_ativo.txt vazio');
+
+  const source = `pointer:${db}`;
+  if (!pool || source !== currentSource) {
+    const oldPool = pool;
     pool = new Pool({
       host: config.db.host,
       port: config.db.port,
@@ -26,16 +50,11 @@ export function getPool(): Pool {
       max: 10,
       idleTimeoutMillis: 30_000,
     });
-
+    currentSource = source;
     currentDb = db;
-
     log(`Conectando ao banco ativo: ${db}`);
 
-    if (oldPool) {
-      void oldPool.end().catch(() => {
-        // Falha ao encerrar o pool antigo não deve derrubar a API.
-      });
-    }
+    if (oldPool) void oldPool.end().catch(() => undefined);
   }
 
   return pool;

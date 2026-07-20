@@ -1,8 +1,9 @@
 import ApiErrorBanner from "../components/ApiErrorBanner";
 import DataTableCard, { type Column } from "../components/DataTableCard";
-import { getProducers, type Producer } from "../lib/api";
+import type { PageParams, Producer, ProducersResponse } from "../types";
 import { formatNumber } from "../lib/format";
 import { usePaginatedList } from "../lib/usePaginatedList";
+import { useGetProducersQuery } from '../services/gestaguaApi';
 
 // tamanhos de página do seletor (o backend limita em 100)
 const PAGE_SIZES = [15, 50, 100];
@@ -32,14 +33,16 @@ const COLUMNS: Column<Producer>[] = [
 ];
 
 export default function ProducersPage() {
-  const list = usePaginatedList<Producer>(async (params) => {
-    const response = await getProducers(params);
-    return {
+  const list = usePaginatedList<ProducersResponse, Producer, PageParams>(
+    useGetProducersQuery,
+    (params) => params,
+    (response) => ({
       items: response.producers,
       pagination: response.pagination,
       dataSource: response.dataSource,
-    };
-  }, PAGE_SIZES[0]);
+    }),
+    PAGE_SIZES[0],
+  );
 
   return (
     <>

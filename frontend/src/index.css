@@ -1,4 +1,9 @@
 @import 'tailwindcss';
+@source './pages/ProjectInformationPage.tsx';
+@source './components/project/ProjectModalitiesSection.tsx';
+@source './components/project/ProjectInternalHeader.tsx';
+@source './pages/ProjectStagesPage.tsx';
+@source './pages/ProjectInstallmentsPage.tsx';
 
 /* ============================================================
    Montserrat self-hosted — MESMOS arquivos do MVGI

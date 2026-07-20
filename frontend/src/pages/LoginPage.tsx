@@ -2,7 +2,9 @@ import { Droplets, Eye, EyeOff, KeyRound, LoaderCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBranding } from '../branding/BrandingContext';
-import { getKey, setKey, validateKey } from '../lib/api';
+import { getKey, setKey } from '../lib/auth';
+import { hasApiStatus } from '../lib/apiError';
+import { useValidateKeyMutation } from '../services/gestaguaApi';
 
 /**
  * Tela de login (estilo MVGI: painel da marca + card de acesso).
@@ -15,8 +17,8 @@ export default function LoginPage() {
 
   const [accessKey, setAccessKey] = useState('');
   const [show, setShow] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [validateKey, { isLoading: loading }] = useValidateKeyMutation();
 
   // já autenticado? vai direto pro painel
   useEffect(() => {
@@ -27,20 +29,17 @@ export default function LoginPage() {
     event.preventDefault();
     const key = accessKey.trim();
     if (!key || loading) return;
-    setLoading(true);
     setError(null);
     try {
-      const result = await validateKey(key);
-      if (result === 'invalid') {
-        setError('Chave recusada pela API. Confere e tenta de novo.');
-      } else {
-        setKey(key);
-        navigate('/', { replace: true });
-      }
-    } catch {
-      setError('Não consegui falar com a API. Ela está rodando?');
-    } finally {
-      setLoading(false);
+      await validateKey(key).unwrap();
+      setKey(key);
+      navigate('/', { replace: true });
+    } catch (validationError) {
+      setError(
+        hasApiStatus(validationError, 401)
+          ? 'Chave recusada pela API. Confere e tenta de novo.'
+          : 'Não consegui falar com a API. Ela está rodando?',
+      );
     }
   }
 

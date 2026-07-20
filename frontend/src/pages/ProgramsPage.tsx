@@ -1,8 +1,9 @@
 import ApiErrorBanner from '../components/ApiErrorBanner';
 import DataTableCard, { type Column } from '../components/DataTableCard';
-import { getPrograms, type Program } from '../lib/api';
+import type { PageParams, Program, ProgramsResponse } from '../types';
 import { formatNumber } from '../lib/format';
 import { usePaginatedList } from '../lib/usePaginatedList';
+import { useGetProgramsQuery } from '../services/gestaguaApi';
 
 const PAGE_SIZES = [10, 50, 100];
 
@@ -56,14 +57,16 @@ const COLUMNS: Column<Program>[] = [
 ];
 
 export default function ProgramsPage() {
-  const list = usePaginatedList<Program>(async (params) => {
-    const response = await getPrograms(params);
-    return {
+  const list = usePaginatedList<ProgramsResponse, Program, PageParams>(
+    useGetProgramsQuery,
+    (params) => params,
+    (response) => ({
       items: response.programs,
       pagination: response.pagination,
       dataSource: response.dataSource,
-    };
-  }, PAGE_SIZES[0]);
+    }),
+    PAGE_SIZES[0],
+  );
 
   return (
     <>

@@ -5,27 +5,20 @@ import {
   Droplets,
   FolderKanban,
   LandPlot,
-  MapPin,
   TreePine,
   XCircle,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ApiErrorBanner from '../components/ApiErrorBanner';
 import Card, { CARD, INNER_CARD } from '../components/Card';
-import ProjectModal from '../components/ProjectModal';
 import { MiniStat, StatCard } from '../components/StatCard';
 import StatusBadge from '../components/StatusBadge';
-import {
-  ApiError,
-  clearKey,
-  getAllProjects,
-  getProject,
-  type Project,
-} from '../lib/api';
+import { getApiErrorMessage } from '../lib/apiError';
 import { formatDate, formatNumber, mirrorLabel } from '../lib/format';
 import { EASE, riseIn, stagger } from '../lib/motion';
+import { useGetAllProjectsQuery } from '../services/gestaguaApi';
 
 /* ---------- blocos ---------- */
 
@@ -95,15 +88,19 @@ function Bars({ data, accent }: { data: [string, number][]; accent?: boolean }) 
 
 function Skeleton() {
   return (
-    <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <Card key={`stat-${i}`} className="h-33 animate-pulse" />
-      ))}
-      {Array.from({ length: 4 }).map((_, i) => (
-        <Card key={`mini-${i}`} className="h-17 animate-pulse" />
-      ))}
-      <Card className="col-span-2 h-45 animate-pulse" />
-      <Card className="col-span-2 h-45 animate-pulse" />
+    <div>
+      <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Card key={`stat-${i}`} className="h-33 animate-pulse" />
+        ))}
+      </div>
+      <div className="mt-3.5 grid gap-3.5 sm:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Card key={`mini-${i}`} className="h-17 animate-pulse" />
+        ))}
+      </div>
+      <Card className="mt-5 h-45 animate-pulse" />
+      <Card className="mt-5 h-45 animate-pulse" />
     </div>
   );
 }
@@ -114,36 +111,14 @@ const NA = new Set(['', 'Não aplicável', 'não aplicável']);
 
 export default function OverviewPage() {
   const navigate = useNavigate();
-  const [projects, setProjects] = useState<Project[] | null>(null);
-  const [dataSource, setDataSource] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [selected, setSelected] = useState<Project | null>(null);
-
-  const loadProjects = useCallback(async () => {
-    setError(null);
-    setProjects(null);
-    try {
-      const response = await getAllProjects();
-      setProjects(response.projects);
-      setDataSource(response.dataSource);
-    } catch (e) {
-      if (e instanceof ApiError && e.status === 401) {
-        clearKey();
-        navigate('/login', { replace: true });
-        return;
-      }
-      setError(e instanceof Error ? e.message : String(e));
-    }
-  }, [navigate]);
-
-  useEffect(() => {
-    loadProjects();
-  }, [loadProjects]);
+  const { data, isLoading, error, refetch } = useGetAllProjectsQuery();
+  const projects = data?.projects ?? null;
+  const dataSource = data?.dataSource ?? null;
+  const errorMessage = error ? getApiErrorMessage(error) : null;
 
   const metrics = useMemo(() => {
     const list = projects ?? [];
     const byStatus = { em_execucao: 0, cancelado: 0, arquivado: 0 } as Record<string, number>;
-    const municipalities = new Map<string, number>();
     const stages = new Map<string, number>();
     let springs = 0;
     let totalArea = 0;
@@ -151,10 +126,6 @@ export default function OverviewPage() {
 
     for (const project of list) {
       byStatus[project.status] = (byStatus[project.status] ?? 0) + 1;
-      const municipality = project.location.municipality ?? '';
-      if (!NA.has(municipality)) {
-        municipalities.set(municipality, (municipalities.get(municipality) ?? 0) + 1);
-      }
       if (project.macroStage) {
         stages.set(project.macroStage, (stages.get(project.macroStage) ?? 0) + 1);
       }
@@ -163,9 +134,6 @@ export default function OverviewPage() {
       nativeVegetationArea += project.property.nativeVegetationAreaHa ?? 0;
     }
 
-    const topMunicipalities = [...municipalities.entries()]
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5);
     const byStage = [...stages.entries()].sort((a, b) => b[1] - a[1]);
     const recentProjects = [...list]
       .sort((a, b) => (b.updatedAt ?? '').localeCompare(a.updatedAt ?? ''))
@@ -173,22 +141,16 @@ export default function OverviewPage() {
 
     return {
       byStatus,
-      topMunicipalities,
       byStage,
       springs,
       totalArea,
       nativeVegetationArea,
-      municipalities: municipalities.size,
       recentProjects,
     };
   }, [projects]);
 
-  async function openDetails(id: string) {
-    try {
-      setSelected(await getProject(id));
-    } catch {
-      /* silencioso */
-    }
+  function openDetails(id: string) {
+    navigate(`/projetos/${id}/informacoes`);
   }
 
   return (
@@ -214,15 +176,15 @@ export default function OverviewPage() {
         )}
       </motion.div>
 
-      {error && (
+      {errorMessage && (
         <ApiErrorBanner
-          error={error}
-          onRetry={loadProjects}
+          error={errorMessage}
+          onRetry={() => void refetch()}
           message="Não consegui carregar os dados"
         />
       )}
 
-      {!projects && !error && <Skeleton />}
+      {isLoading && <Skeleton />}
 
       {projects && (
         <>
@@ -268,14 +230,8 @@ export default function OverviewPage() {
             variants={stagger}
             initial="hidden"
             animate="show"
-            className="mb-5 grid grid-cols-2 gap-3.5 lg:grid-cols-4"
+            className="mb-5 grid gap-3.5 sm:grid-cols-3"
           >
-            <MiniStat
-              icon={MapPin}
-              value={metrics.municipalities}
-              label="Municípios"
-              tone="accent"
-            />
             <MiniStat icon={Droplets} value={metrics.springs} label="Nascentes" tone="accent" />
             <MiniStat
               icon={LandPlot}
@@ -293,14 +249,7 @@ export default function OverviewPage() {
             />
           </motion.div>
 
-          <div className="mb-5 grid gap-5 lg:grid-cols-2">
-            <Section
-              title="Top municípios"
-              badge={`${metrics.topMunicipalities.length} maiores`}
-              subtitle="Projetos por município"
-            >
-              <Bars data={metrics.topMunicipalities} />
-            </Section>
+          <div className="mb-5">
             <Section
               title="Etapas"
               badge={`${metrics.byStage.length} ${metrics.byStage.length === 1 ? 'etapa' : 'etapas'}`}
@@ -361,8 +310,6 @@ export default function OverviewPage() {
           </Section>
         </>
       )}
-
-      <ProjectModal project={selected} onClose={() => setSelected(null)} />
     </>
   );
 }

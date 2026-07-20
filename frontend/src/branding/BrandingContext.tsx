@@ -10,7 +10,7 @@ import {
 import { derivePalette, isValidHex } from './color';
 import { applyFavicon } from './favicon';
 import { DEFAULT_BRANDING } from './presets';
-import type { BrandingConfig } from './types';
+import type { BrandingConfig } from '../types';
 
 const STORAGE_KEY = 'gestagua_branding_v1';
 

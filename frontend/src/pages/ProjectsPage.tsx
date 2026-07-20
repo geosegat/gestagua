@@ -1,13 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ApiErrorBanner from '../components/ApiErrorBanner';
 import DataTableCard, { type Column } from '../components/DataTableCard';
 import FilterChips, { type FilterOption } from '../components/FilterChips';
-import ProjectModal from '../components/ProjectModal';
 import Stats from '../components/Stats';
 import StatusBadge from '../components/StatusBadge';
-import { getProject, getProjects, type Project } from '../lib/api';
+import type { Project, ProjectPageParams, ProjectsResponse } from '../types';
 import { formatDate, formatNumber } from '../lib/format';
 import { usePaginatedList } from '../lib/usePaginatedList';
+import { useGetProjectsQuery } from '../services/gestaguaApi';
 
 // tamanhos de página do seletor (o backend limita em 100)
 const PAGE_SIZES = [15, 50, 100];
@@ -89,28 +90,22 @@ const COLUMNS: Column<Project>[] = [
 ];
 
 export default function ProjectsPage() {
-  const [status, setStatus] = useState('');
-  const [selected, setSelected] = useState<Project | null>(null);
-  // total do programa inteiro: congelado enquanto um filtro de situação está
-  // ativo, senão o card "Projetos Gestágua" viraria o total do filtro.
-  const [overallTotal, setOverallTotal] = useState<number | null>(null);
+  const navigate = useNavigate();
+  const [status, setStatus] = useState('em_execucao');
+  const { data: overallData } = useGetProjectsQuery({ page: 1, limit: 1 });
+  const overallTotal = overallData?.pagination.total ?? null;
 
-  const list = usePaginatedList<Project>(
-    async (params) => {
-      const response = await getProjects({ ...params, status });
-      return {
+  const list = usePaginatedList<ProjectsResponse, Project, ProjectPageParams>(
+    useGetProjectsQuery,
+    (params) => ({ ...params, status }),
+    (response) => ({
         items: response.projects,
         pagination: response.pagination,
         dataSource: response.dataSource,
-      };
-    },
+      }),
     PAGE_SIZES[0],
     status,
   );
-
-  useEffect(() => {
-    if (!status && !list.loading && !list.error && !list.search) setOverallTotal(list.total);
-  }, [status, list.loading, list.error, list.search, list.total]);
 
   const isFiltering = Boolean(status || list.search);
 
@@ -121,14 +116,11 @@ export default function ProjectsPage() {
     0,
   );
   const inProgress = pageItems.filter((project) => project.status === 'em_execucao').length;
-  const executionLabel = isFiltering ? '—' : `${inProgress}/${pageItems.length}`;
+  const executionLabel =
+    list.loading && pageItems.length === 0 ? '—' : `${inProgress}/${pageItems.length}`;
 
-  async function openDetails(project: Project) {
-    try {
-      setSelected(await getProject(project.id));
-    } catch {
-      /* silencioso: o detalhe é um bônus, a linha da lista já tem o essencial */
-    }
+  function openDetails(project: Project) {
+    navigate(`/projetos/${project.id}/informacoes`);
   }
 
   return (
@@ -146,7 +138,7 @@ export default function ProjectsPage() {
       </div>
 
       <Stats
-        total={isFiltering ? overallTotal : list.total}
+        total={overallTotal ?? (isFiltering ? null : list.total)}
         executionLabel={executionLabel}
         springs={springs}
       />
@@ -172,7 +164,6 @@ export default function ProjectsPage() {
         }
       />
 
-      <ProjectModal project={selected} onClose={() => setSelected(null)} />
     </>
   );
 }

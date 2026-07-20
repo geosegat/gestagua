@@ -27,6 +27,16 @@ export default defineConfig({
     // build cai direto no backend, que serve o front na mesma origem da API
     outDir: '../backend/public',
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules/@reduxjs') || id.includes('node_modules/react-redux')) {
+            return 'data-layer';
+          }
+          if (id.includes('node_modules/framer-motion')) return 'motion';
+        },
+      },
+    },
   },
   server: {
     port: 5174,

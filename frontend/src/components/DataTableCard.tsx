@@ -1,7 +1,7 @@
 import { ChevronDown, ChevronLeft, ChevronRight, Search, Table2 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { formatNumber, mirrorLabel } from '../lib/format';
-import type { PaginatedList } from '../lib/usePaginatedList';
+import type { PaginatedList } from '../types';
 
 // MODELO do ARVO (medidas), CORES do GestAgua nos ACENTOS (título/números).
 // th: padding 6px 24px · td: padding-x 24px + altura fixa 80px · fonte 14px.
@@ -127,8 +127,19 @@ export default function DataTableCard<T>({
               <li
                 key={rowKey(row)}
                 onClick={onRowClick ? () => onRowClick(row) : undefined}
+                onKeyDown={
+                  onRowClick
+                    ? (event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          onRowClick(row);
+                        }
+                      }
+                    : undefined
+                }
+                tabIndex={onRowClick ? 0 : undefined}
                 className={[
-                  'px-4 py-3',
+                  'px-4 py-3 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent',
                   onRowClick ? 'cursor-pointer transition-colors active:bg-accent-soft/50' : '',
                 ].join(' ')}
               >
@@ -183,8 +194,19 @@ export default function DataTableCard<T>({
                   <tr
                     key={rowKey(row)}
                     onClick={onRowClick ? () => onRowClick(row) : undefined}
+                    onKeyDown={
+                      onRowClick
+                        ? (event) => {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                              event.preventDefault();
+                              onRowClick(row);
+                            }
+                          }
+                        : undefined
+                    }
+                    tabIndex={onRowClick ? 0 : undefined}
                     className={[
-                      `border-b ${ROW_LINE} last:border-b-0`,
+                      `border-b outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent ${ROW_LINE} last:border-b-0`,
                       onRowClick ? 'cursor-pointer transition-colors hover:bg-accent-soft/50' : '',
                     ].join(' ')}
                   >

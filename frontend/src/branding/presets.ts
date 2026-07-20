@@ -1,4 +1,4 @@
-import type { BrandingConfig } from './types';
+import type { BrandingConfig } from '../types';
 
 /** Tema padrão do produto — Gestágua (petróleo/aqua do demo aprovado). */
 export const DEFAULT_BRANDING: BrandingConfig = {
