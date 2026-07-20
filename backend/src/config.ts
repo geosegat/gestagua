@@ -19,6 +19,12 @@ function envStr(name: string, fallback: string): string {
   return raw === undefined || raw === '' ? fallback : raw;
 }
 
+function envList(name: string, fallback: string[]): string[] {
+  const raw = process.env[name];
+  if (raw === undefined || raw.trim() === '') return fallback;
+  return raw.split(',').map((value) => value.trim()).filter(Boolean);
+}
+
 function envPath(name: string, fallbackRelative: string): string {
   const raw = process.env[name];
   const target = raw === undefined || raw.trim() === '' ? fallbackRelative : raw;
@@ -28,6 +34,10 @@ function envPath(name: string, fallbackRelative: string): string {
 const config: AppConfig = {
   port: envInt('PORT', 8080),
   apiKey: envStr('API_KEY', ''),
+  allowedOrigins: envList('ALLOWED_ORIGINS', [
+    'http://localhost:5174',
+    'http://127.0.0.1:5174',
+  ]),
   gestaguaProgramId: 'e0c5918f-32a5-44bd-917d-ad43fd3111b0',
   pointerFile: envPath('POINTER_FILE', 'banco_ativo.txt'),
   logFile: envPath('LOG_FILE', 'api.log'),

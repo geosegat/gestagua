@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -13,6 +14,19 @@ const indexHtml = path.join(publicDir, 'index.html');
 const temFrontend = fs.existsSync(indexHtml);
 
 app.disable('x-powered-by');
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || config.allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error('origem nao permitida pelo CORS'));
+    },
+    methods: ['GET', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'x-api-key'],
+  }),
+);
 app.use(express.static(publicDir));
 app.use(routes);
 

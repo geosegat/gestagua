@@ -42,6 +42,7 @@ export interface DatabaseConfig {
 export interface AppConfig {
   port: number;
   apiKey: string;
+  allowedOrigins: string[];
   gestaguaProgramId: string;
   pointerFile: string;
   logFile: string;

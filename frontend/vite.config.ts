@@ -24,8 +24,8 @@ console.log('Vite config carregado');
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   build: {
-    // build cai direto no backend, que serve o front na mesma origem da API
-    outDir: '../backend/public',
+    // A Vercel publica o diretorio dist do projeto frontend.
+    outDir: 'dist',
     emptyOutDir: true,
     rollupOptions: {
       output: {
