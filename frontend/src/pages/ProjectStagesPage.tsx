@@ -9,7 +9,7 @@ import {
   Route,
   TextCursorInput,
   Upload,
-} from 'lucide-react';
+} from '../icons';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useParams } from 'react-router-dom';
 import ApiErrorBanner from '../components/ApiErrorBanner';

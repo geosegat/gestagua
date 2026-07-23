@@ -1,11 +1,12 @@
 import type { BrandingConfig } from '../types';
+import { LOGO_SYMBOL } from './assets';
 
-/** Tema padrão do produto — Gestágua (petróleo/aqua do demo aprovado). */
+/** Tema padrão do produto - Gestágua (petróleo/aqua do demo aprovado). */
 export const DEFAULT_BRANDING: BrandingConfig = {
-  version: 1,
+  version: 2,
   productName: 'Gestágua',
   productSubtitle: 'Programa de gestão de água',
-  logoUrl: null,
+  logoUrl: LOGO_SYMBOL,
   colors: {
     primary: '#0c4a55',
     accent: '#16a3b5',

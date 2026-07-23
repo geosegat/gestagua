@@ -1,6 +1,7 @@
-import { Download, RotateCcw, Upload } from 'lucide-react';
+import { Download, RotateCcw, Upload } from '../icons';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useBranding } from '../branding/BrandingContext';
+import { LOGO_SYMBOL } from '../branding/assets';
 import { isValidHex } from '../branding/color';
 import { COLOR_PRESETS } from '../branding/presets';
 import { NAV_SECTIONS } from '../navigation/config';
@@ -84,7 +85,7 @@ export default function PersonalizationPage() {
   function handleLogo(file: File | undefined) {
     if (!file) return;
     if (file.size > 400_000) {
-      setMsg('Logo muito grande (máx. ~400 KB) — use uma imagem menor.');
+      setMsg('Logo muito grande (máx. ~400 KB). Use uma imagem menor.');
       return;
     }
     const reader = new FileReader();
@@ -187,7 +188,7 @@ export default function PersonalizationPage() {
             <button onClick={() => logoRef.current?.click()} className={BTN}>
               <Upload size={15} /> Enviar logo
             </button>
-            {branding.logoUrl && (
+            {branding.logoUrl ? (
               <>
                 <img
                   src={branding.logoUrl}
@@ -198,6 +199,11 @@ export default function PersonalizationPage() {
                   Remover
                 </button>
               </>
+            ) : (
+              // sem esta saída, tirar o logo só teria volta restaurando o tema inteiro
+              <button onClick={() => update({ logoUrl: LOGO_SYMBOL })} className={BTN}>
+                Usar logo do programa
+              </button>
             )}
             <input
               ref={logoRef}

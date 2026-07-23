@@ -18,12 +18,12 @@ const COLUMNS: Column<Producer>[] = [
     header: "Comunidade",
     tdClassName: "text-ink-soft",
     hideBelow: "sm",
-    cell: (producer) => producer.community || "—",
+    cell: (producer) => producer.community || "Não informado",
   },
   {
     header: "Ocupação",
     hideBelow: "md",
-    cell: (producer) => producer.occupation || "—",
+    cell: (producer) => producer.occupation || "Não informado",
   },
   {
     header: "Propriedades",

@@ -6,6 +6,7 @@ export interface ProjectRow extends QueryResultRow {
   contractNumber: string | null;
   status: string;
   contractIssuanceDate: string | Date | null;
+  referenceYear: number;
   contractSigned: boolean | null;
   updatedAt: string | Date | null;
   etapa_nome: string | null;
@@ -65,6 +66,7 @@ export interface Project {
   contract: string | null;
   status: string;
   contractIssueDate: string | Date | null;
+  referenceYear: number;
   contractSigned: boolean | null;
   updatedAt: string | Date | null;
   macroStage: string | null;

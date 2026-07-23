@@ -10,7 +10,7 @@ export const RADIUS = 'rounded-[6px]';
 /** Superfície de card: raio + borda + fundo do tema. */
 export const CARD = `${RADIUS} border border-line bg-card`;
 
-/** Sombra de elevação no hover — cards que reagem ao mouse. */
+/** Sombra de elevação no hover - cards que reagem ao mouse. */
 export const CARD_ELEVATION =
   'transition-shadow hover:shadow-[0_14px_34px_-14px_rgba(13,60,68,0.25)]';
 

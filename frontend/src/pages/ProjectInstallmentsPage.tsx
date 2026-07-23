@@ -5,12 +5,13 @@ import {
   CircleDollarSign,
   Clock3,
   WalletCards,
-} from 'lucide-react';
+} from '../icons';
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import ApiErrorBanner from '../components/ApiErrorBanner';
 import { getApiErrorMessage } from '../lib/apiError';
 import { formatCurrency, formatDate, formatNumber } from '../lib/format';
+import { modalityPresentation } from '../lib/modalities';
 import { useGetProjectInstallmentsQuery } from '../services/gestaguaApi';
 import type { ProducerInstallment, ProducerInstallmentView } from '../types';
 
@@ -35,6 +36,7 @@ function PageLoading() {
 
 function viewLabel(view: ProducerInstallmentView, views: ProducerInstallmentView[]) {
   if (view.kind === 'project') return view.label;
+  const presentation = modalityPresentation({ name: view.label });
 
   const duplicates = views.filter(
     (item) => item.kind === 'modality' && item.label === view.label,
@@ -46,7 +48,7 @@ function viewLabel(view: ProducerInstallmentView, views: ProducerInstallmentView
     ? ` · ${formatNumber(view.modality.areaHa)} ha`
     : '';
 
-  return `${view.label}${suffix}${area}`;
+  return `${presentation.shortTitle}${suffix}${area}`;
 }
 
 function expectedAmount(installment: ProducerInstallment, mode: AmountMode): number {
@@ -353,6 +355,22 @@ export default function ProjectInstallmentsPage() {
 
   return (
     <div className="space-y-5">
+      <section className="rounded-[8px] border border-line bg-card px-5 py-4">
+        <div className="border-l-2 border-accent pl-3">
+          <h2 className="text-[12px] font-semibold text-ink">
+            Regra oficial da 4ª edição
+          </h2>
+          <p className="mt-1 text-[11px] leading-relaxed text-ink-soft">
+            O Decreto 14.210/2026 prevê dois repasses de 50%: o primeiro após a assinatura
+            do contrato e o segundo após a aprovação do relatório de monitoramento.
+          </p>
+        </div>
+        <p className="mt-3 text-[10.5px] leading-relaxed text-warn">
+          O cronograma abaixo reproduz os registros do espelho e ainda pode seguir a estrutura
+          anterior de cinco parcelas. Ele não confirma sozinho os dois pagamentos oficiais.
+        </p>
+      </section>
+
       {data.views.length > 1 && (
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>

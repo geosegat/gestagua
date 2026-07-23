@@ -11,10 +11,15 @@ export interface PaginationQuery {
   page?: string;
   limit?: string;
   busca?: string;
+  ano?: string;
 }
 
 export interface ProjectListQuery extends PaginationQuery {
   status?: string;
+}
+
+export interface YearQuery {
+  ano?: string;
 }
 
 export interface ProgramListQuery {

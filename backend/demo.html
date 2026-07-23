@@ -33,9 +33,6 @@
     background: var(--paper);
     color: var(--ink);
     min-height: 100vh;
-    background-image:
-      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(22,163,181,.10), transparent),
-      repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(12,74,85,.035) 40px);
   }
 
   /* ---------- topo ---------- */
@@ -45,13 +42,6 @@
     padding: 34px 28px 0;
     position: relative;
     overflow: hidden;
-  }
-  header::before {
-    content: "";
-    position: absolute; inset: 0;
-    background:
-      radial-gradient(circle at 85% 20%, rgba(22,163,181,.35), transparent 45%),
-      radial-gradient(circle at 10% 90%, rgba(22,163,181,.25), transparent 40%);
   }
   .head-inner { max-width: 1080px; margin: 0 auto; position: relative; }
   .kicker {
@@ -240,10 +230,10 @@
   <div class="head-inner">
     <div class="kicker">Demonstração · API somente leitura</div>
     <h1>Programa <em>Gestágua</em></h1>
-    <p class="head-sub">Painel de consulta aos projetos do programa — dados espelhados diariamente do sistema MVGI, sem acesso ao banco de produção.</p>
+    <p class="head-sub">Painel de consulta aos projetos do programa, com dados espelhados diariamente do sistema MVGI e sem acesso ao banco de produção.</p>
     <div class="head-meta">
-      <span>Fonte: <b id="m-fonte">—</b></span>
-      <span>Espelho: <b id="m-espelho">—</b></span>
+      <span>Fonte: <b id="m-fonte">Não informado</b></span>
+      <span>Espelho: <b id="m-espelho">Não informado</b></span>
       <span>Acesso: <b>chave de API · leitura</b></span>
     </div>
   </div>
@@ -268,10 +258,10 @@
   <!-- painel -->
   <section id="painel">
     <div class="stats">
-      <div class="stat"><div class="num" id="s-total">—</div><div class="lbl">Projetos Gestágua</div></div>
-      <div class="stat"><div class="num" id="s-exec">—</div><div class="lbl">Em execução</div></div>
-      <div class="stat"><div class="num" id="s-munis">—</div><div class="lbl">Municípios (página)</div></div>
-      <div class="stat"><div class="num" id="s-nasc">—</div><div class="lbl">Nascentes (página)</div></div>
+      <div class="stat"><div class="num" id="s-total">Não informado</div><div class="lbl">Projetos Gestágua</div></div>
+      <div class="stat"><div class="num" id="s-exec">Não informado</div><div class="lbl">Em execução</div></div>
+      <div class="stat"><div class="num" id="s-munis">Não informado</div><div class="lbl">Municípios (página)</div></div>
+      <div class="stat"><div class="num" id="s-nasc">Não informado</div><div class="lbl">Nascentes (página)</div></div>
     </div>
 
     <div class="toolbar">
@@ -280,7 +270,7 @@
       <button class="chip" data-status="cancelado">Cancelados</button>
       <button class="chip" data-status="arquivado">Arquivados</button>
       <div class="spacer"></div>
-      <span class="mirror-tag">espelho de <b id="mirrorDate">—</b></span>
+      <span class="mirror-tag">espelho de <b id="mirrorDate">Não informado</b></span>
     </div>
 
     <div class="tablewrap">
@@ -302,7 +292,7 @@
 
     <div class="pager">
       <button class="btn" id="btnPrev">‹ Anterior</button>
-      <span id="pageInfo">—</span>
+      <span id="pageInfo">Não informado</span>
       <button class="btn" id="btnNext">Próxima ›</button>
     </div>
   </section>
@@ -315,7 +305,7 @@
     <div class="modal-head">
       <button class="modal-close" id="btnClose">✕</button>
       <div class="kicker">Projeto Gestágua</div>
-      <h3 id="d-contrato">—</h3>
+      <h3 id="d-contrato">Não informado</h3>
     </div>
     <div class="modal-body">
       <div class="dl" id="d-body"></div>
@@ -333,9 +323,9 @@
 
   var $ = function (id) { return document.getElementById(id); };
 
-  function fmtNum(n) { return (n === null || n === undefined) ? "—" : Number(n).toLocaleString("pt-BR"); }
+  function fmtNum(n) { return (n === null || n === undefined) ? "Não informado" : Number(n).toLocaleString("pt-BR"); }
   function fmtData(d) {
-    if (!d) return "—";
+    if (!d) return "Não informado";
     var dt = new Date(d);
     return isNaN(dt) ? d : dt.toLocaleDateString("pt-BR");
   }
@@ -347,7 +337,7 @@
   }
   function mirrorLabel(db) {
     var m = /(\d{4})_(\d{2})_(\d{2})/.exec(db || "");
-    return m ? (m[3] + "/" + m[2] + "/" + m[1]) : (db || "—");
+    return m ? (m[3] + "/" + m[2] + "/" + m[1]) : (db || "Não informado");
   }
 
   function chamar(rota) {
@@ -384,12 +374,12 @@
         if (p.propriedade && p.propriedade.totalNascentes) nasc += p.propriedade.totalNascentes;
         if (p.status === "em_execucao") exec++;
         return '<tr data-id="' + p.id + '">' +
-          '<td class="contract">' + (p.contrato || "—") + "</td>" +
-          '<td><div class="prop-name">' + ((p.propriedade && p.propriedade.nome) || "—") + "</div>" +
+          '<td class="contract">' + (p.contrato || "Não informado") + "</td>" +
+          '<td><div class="prop-name">' + ((p.propriedade && p.propriedade.nome) || "Não informado") + "</div>" +
             '<div class="muted">' + ((p.propriedade && p.propriedade.comunidade) || "") + "</div></td>" +
-          '<td class="hide-sm">' + ((p.localizacao && p.localizacao.municipio) || "—") +
+          '<td class="hide-sm">' + ((p.localizacao && p.localizacao.municipio) || "Não informado") +
             (p.localizacao && p.localizacao.uf ? '<span class="muted"> · ' + p.localizacao.uf + "</span>" : "") + "</td>" +
-          '<td class="hide-sm">' + (p.etapa || "—") +
+          '<td class="hide-sm">' + (p.etapa || "Não informado") +
             (p.etapaMacro ? '<div class="muted">' + p.etapaMacro + "</div>" : "") + "</td>" +
           "<td>" + badge(p.status) + "</td></tr>";
       }).join("");
@@ -422,7 +412,7 @@
   }
 
   function linha(t, v, cls) {
-    return '<div class="' + (cls || "") + '"><div class="dt">' + t + '</div><div class="dd">' + (v || "—") + "</div></div>";
+    return '<div class="' + (cls || "") + '"><div class="dt">' + t + '</div><div class="dd">' + (v || "Não informado") + "</div></div>";
   }
 
   function abrirDetalhe(id) {
@@ -435,7 +425,7 @@
         linha("Status", badge(p.status), "full") +
         linha("Propriedade", pr.nome) +
         linha("Comunidade", pr.comunidade) +
-        linha("Município", (loc.municipio || "—") + (loc.uf ? " · " + loc.uf : "")) +
+        linha("Município", (loc.municipio || "Não informado") + (loc.uf ? " · " + loc.uf : "")) +
         linha("Bacia hidrográfica", p.baciaHidrografica) +
         linha("Área total", pr.areaTotalHa != null ? fmtNum(pr.areaTotalHa) + " ha" : null) +
         linha("Vegetação nativa", pr.areaVegetacaoNativaHa != null ? fmtNum(pr.areaVegetacaoNativaHa) + " ha" : null) +

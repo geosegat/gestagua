@@ -1,7 +1,7 @@
-# GestAgua — Frontend
+# GestAgua - Frontend
 
 React + TypeScript + Vite + Tailwind v4. Consome o **backend** em
-`../backend` (a `api-prefeitura`) — a API somente leitura do programa Gestágua.
+`../backend` (a `api-prefeitura`) - a API somente leitura do programa Gestágua.
 Visual e fluxo herdados do demo aprovado (`../backend/demo.html`):
 paleta petróleo/aqua, fontes Fraunces + Archivo, gate de chave, stats, filtros,
 tabela e modal de detalhe.
@@ -18,7 +18,7 @@ O Vite faz proxy de `/projetos` e `/health` para `http://localhost:8080`
 localmente (`node server.js` em `../backend`, com um `config.js` apontando
 pra um Postgres com o espelho).
 
-Sem API no ar, a tela mostra o gate de chave com o erro de conexão — o
+Sem API no ar, a tela mostra o gate de chave com o erro de conexão - o
 comportamento é o mesmo do demo.
 
 ## Autenticação
@@ -42,7 +42,7 @@ front separado da API, defina `VITE_API_URL` com a URL pública dela.
 ## White-label (drawer + tema)
 
 O produto é um **shell** com drawer lateral temável (mesma UX do drawer do MVGI:
-rail colapsado, expande no hover, pin, seções) — mas **100% orientado a dados**:
+rail colapsado, expande no hover, pin, seções) - mas **100% orientado a dados**:
 
 - **Tema**: o admin muda cores/nome/logo em **/personalizacao** (preview ao vivo).
   O `BrandingProvider` deriva a paleta (hover/deep/soft/contraste) de só 2 cores

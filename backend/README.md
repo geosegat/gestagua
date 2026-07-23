@@ -1,4 +1,4 @@
-# GestAgua — Backend (API somente leitura)
+# GestAgua - Backend (API somente leitura)
 
 Express + `pg`, SQL cru, **só GET**. Lê o clone diário do banco do MVGI
 (o nome do banco do dia vem do pointer file `banco_ativo.txt`) e serve o
@@ -16,7 +16,7 @@ npm run dev            # http://localhost:8080 (tsx, com reload)
 ## Estrutura (padrão pra rotas novas)
 
 ```
-.env                      segredos/ambiente (GITIGNORED — nunca commitar)
+.env                      segredos/ambiente (GITIGNORED - nunca commitar)
 .env.example              modelo das variáveis (versionado, sem segredos)
 demo.html                 página de demonstração (/demo)
 src/
@@ -63,7 +63,9 @@ Resposta de lista sempre no mesmo formato:
 | ------------------- | ------ | -------------------------------------------- |
 | `GET /health`       | ✅     | healthcheck (sem chave)                       |
 | `GET /demo`         | ✅     | página de demonstração (sem chave)            |
-| `GET /projetos`     | ✅     | lista paginada (`page`, `limit`, `status`)    |
+| `GET /dashboard`    | ✅     | resumo ativo; aceita `ano=AAAA`               |
+| `GET /indicadores`  | ✅     | APP, restauração, pagamentos e carbono; aceita `ano=AAAA` |
+| `GET /projetos`     | ✅     | lista paginada (`page`, `limit`, `status`, `ano`) |
 | `GET /projetos/:id` | ✅     | detalhe + tags                                |
 | `GET /projetos/:id/modalidades` | ✅ | modalidades, culturas e insumos      |
 | `GET /projetos/:id/etapas` | ✅ | jornada e progresso das etapas              |
@@ -73,7 +75,26 @@ Resposta de lista sempre no mesmo formato:
 | `GET /mobilizacoes` | ✅     | lista paginada (`page`, `limit`, `busca`)     |
 | `GET /programs`     | ✅     | programas disponíveis no espelho              |
 
-## ⚠️ Dados pessoais (LGPD) — leia antes de expor coisa nova
+### Ano de referência
+
+`GET /dashboard`, `GET /indicadores` e `GET /projetos` aceitam `ano=AAAA`.
+O ano usa a data de emissão do contrato e, quando ela não foi preenchida,
+usa a data de criação do projeto. A resposta de dashboard e indicadores
+também devolve `filters.availableYears`.
+
+### Cobertura dos indicadores
+
+`GET /indicadores` não transforma campo vazio em resultado confirmado:
+
+- área restaurada usa `lands.realizedLandArea` e devolve
+  `restoredAreaCoverage`;
+- área planejada em APP usa `lands.permanentPreservationArea` e devolve
+  `appAreaCoverage`;
+- pagamentos comparam `installments.isExecuted` e `installments.paidAt`;
+- carbono devolve o catálogo e sua cobertura, mas mantém
+  `totalStoredCarbon: null` até a definição da regra de cálculo e unidade.
+
+## ⚠️ Dados pessoais (LGPD) - leia antes de expor coisa nova
 
 Esta API foi prometida à prefeitura como **sem dados pessoais** (o rodapé do
 demo diz isso). A tabela `producers` tem CPF, RG, telefones, nascimento…
@@ -81,7 +102,7 @@ demo diz isso). A tabela `producers` tem CPF, RG, telefones, nascimento…
 - Na listagem de produtores, exponha o **mínimo**: nome (`users.name` via
   `producers."userId"`), comunidade, ocupação, contagem de propriedades.
 - `users.password` **jamais** sai na API, em hipótese nenhuma.
-- CPF/RG/telefones só com decisão explícita do time — e nesse caso separar
+- CPF/RG/telefones só com decisão explícita do time - e nesse caso separar
   a chave/escopo da prefeitura da chave do painel interno primeiro.
 
 ## Banco (o que existe no clone)
@@ -89,4 +110,4 @@ demo diz isso). A tabela `producers` tem CPF, RG, telefones, nascimento…
 Tabelas principais: `projects` (→ `stages` → `etapas`; → `properties` →
 `addresses`, `watersheds`), `producers` (→ `users` pro nome;
 `properties."producerId"` faz o vínculo), `tags`/`projects_tags`.
-Tudo somente leitura — o clone é recriado todo dia, **nunca** grave nele.
+Tudo somente leitura - o clone é recriado todo dia, **nunca** grave nele.

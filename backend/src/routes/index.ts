@@ -1,6 +1,9 @@
 import { Router } from 'express';
 import path from 'node:path';
 
+import * as dashboard from '../controllers/dashboardController';
+import * as portalPublico from '../controllers/publicPortalController';
+import * as indicadores from '../controllers/indicatorsController';
 import * as mobilizacoes from '../controllers/mobilizationsController';
 import * as modalidadesProjeto from '../controllers/projectModalitiesController';
 import * as parcelasProjeto from '../controllers/projectInstallmentsController';
@@ -21,8 +24,12 @@ router.get('/health', (_req, res) => {
 router.get('/demo', (_req, res) => {
   res.sendFile(path.resolve(process.cwd(), 'demo.html'));
 });
+router.get('/dashboard', asyncHandler(dashboard.summary));
+// portal público: agregados curados, sem dado pessoal (ver o controller)
+router.get('/publico/portal', asyncHandler(portalPublico.portal));
 
 router.use(auth);
+router.get('/indicadores', asyncHandler(indicadores.summary));
 router.get('/projetos', asyncHandler(projetos.listar));
 router.get('/projetos/:id/modalidades', asyncHandler(modalidadesProjeto.listar));
 router.get('/projetos/:id/parcelas-produtor', asyncHandler(parcelasProjeto.listar));

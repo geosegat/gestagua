@@ -41,6 +41,9 @@ export default defineConfig({
   server: {
     port: 5174,
     proxy: {
+      '/dashboard': apiOnly(API),
+      '/publico': apiOnly(API),
+      '/indicadores': apiOnly(API),
       '/projetos': apiOnly(API),
       '/produtores': apiOnly(API),
       '/propriedades': apiOnly(API),

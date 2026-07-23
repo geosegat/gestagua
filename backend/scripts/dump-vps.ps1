@@ -1,5 +1,5 @@
 # ============================================================
-#  dump-vps.ps1  —  RODAR NA VPS
+#  dump-vps.ps1  -  RODAR NA VPS
 #  Gera um dump completo do banco do dia (clone) do Gestagua.
 #  Uso:
 #    .\dump-vps.ps1                      # senha padrao 0202, saida no Desktop

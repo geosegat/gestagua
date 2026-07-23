@@ -1,9 +1,9 @@
-import type { LucideIcon } from 'lucide-react';
+import type { RemixiconComponentType } from '../icons';
 
 export interface NavItem {
   id: string;
   label: string;
-  icon: LucideIcon;
+  icon: RemixiconComponentType;
   path: string;
   locked?: boolean;
 }

@@ -13,6 +13,7 @@ import { DEFAULT_BRANDING } from './presets';
 import type { BrandingConfig } from '../types';
 
 const STORAGE_KEY = 'gestagua_branding_v1';
+const VERSION = 2;
 
 interface BrandingContextValue {
   branding: BrandingConfig;
@@ -40,8 +41,12 @@ function load(): BrandingConfig {
 /** Garante shape válido mesmo com JSON antigo/alheio (import ou storage). */
 function sanitize(raw: Partial<BrandingConfig>): BrandingConfig {
   const colors = raw.colors ?? DEFAULT_BRANDING.colors;
+  // Tema gravado antes da v2 não conhecia o logo do programa: ali "sem logo"
+  // era o padrão de fábrica, não uma escolha do admin. Adota o logo novo sem
+  // descartar cores e menu que já estivessem customizados.
+  const legacy = raw.version !== VERSION;
   return {
-    version: 1,
+    version: VERSION,
     productName:
       typeof raw.productName === 'string' && raw.productName.trim()
         ? raw.productName
@@ -50,7 +55,12 @@ function sanitize(raw: Partial<BrandingConfig>): BrandingConfig {
       typeof raw.productSubtitle === 'string'
         ? raw.productSubtitle
         : DEFAULT_BRANDING.productSubtitle,
-    logoUrl: typeof raw.logoUrl === 'string' ? raw.logoUrl : null,
+    logoUrl:
+      typeof raw.logoUrl === 'string'
+        ? raw.logoUrl
+        : legacy
+          ? DEFAULT_BRANDING.logoUrl
+          : null,
     colors: {
       primary: isValidHex(colors.primary ?? '') ? colors.primary : DEFAULT_BRANDING.colors.primary,
       accent: isValidHex(colors.accent ?? '') ? colors.accent : DEFAULT_BRANDING.colors.accent,
@@ -68,11 +78,11 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
     const root = document.documentElement;
     for (const [k, v] of Object.entries(palette)) root.style.setProperty(k, v);
     document.title = `${branding.productName} · Painel`;
-    applyFavicon(branding.colors.primary, branding.colors.accent);
+    applyFavicon(branding.colors.primary, branding.colors.accent, branding.logoUrl);
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(branding));
     } catch {
-      /* storage cheio (logo grande demais) — tema segue aplicado em memória */
+      /* storage cheio (logo grande demais) - tema segue aplicado em memória */
     }
   }, [branding]);
 
@@ -103,7 +113,7 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
       setBranding(sanitize(parsed));
       return null;
     } catch {
-      return 'Não consegui ler o arquivo — é um JSON válido?';
+      return 'Não consegui ler o arquivo. É um JSON válido?';
     }
   }, []);
 

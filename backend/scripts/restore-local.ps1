@@ -1,5 +1,5 @@
 # ============================================================
-#  restore-local.ps1  —  RODAR NA SUA MAQUINA (dev)
+#  restore-local.ps1  -  RODAR NA SUA MAQUINA (dev)
 #  Cria o banco gestagua_teste e restaura o dump da VPS.
 #  Uso:
 #    .\restore-local.ps1 -DumpFile "C:\Users\voce\Desktop\gestagua_dump.dump"

@@ -1,16 +1,21 @@
 import { motion } from 'framer-motion';
-import { Activity, Droplets, FolderKanban } from 'lucide-react';
+import { FolderKanban, LandPlot, MapPin } from '../icons';
+import { formatNumber } from '../lib/format';
 import { stagger } from '../lib/motion';
 import { StatCard } from './StatCard';
 
 interface StatsProps {
-  total: number | null;
-  executionLabel: string;
-  springs: number;
+  activeProjects: number | null;
+  activeProperties: number | null;
+  totalAreaHa: number | null;
 }
 
 /** Resumo do topo da aba Projetos. */
-export default function Stats({ total, executionLabel, springs }: StatsProps) {
+export default function Stats({
+  activeProjects,
+  activeProperties,
+  totalAreaHa,
+}: StatsProps) {
   return (
     <motion.div
       variants={stagger}
@@ -20,19 +25,25 @@ export default function Stats({ total, executionLabel, springs }: StatsProps) {
     >
       <StatCard
         icon={FolderKanban}
-        value={total ?? '—'}
-        label="Projetos Gestágua"
+        value={activeProjects ?? 'Não informado'}
+        label="Projetos ativos"
         tone="brand"
-        hint="Total do programa — não muda quando você filtra"
+        hint="Projetos em execução; cancelados e arquivados não entram no cálculo"
       />
       <StatCard
-        icon={Activity}
-        value={executionLabel}
-        label="Em execução"
+        icon={MapPin}
+        value={activeProperties ?? 'Não informado'}
+        label="Propriedades ativas"
         tone="ok"
-        hint="Em execução sobre o total da página carregada"
+        hint="Propriedades distintas vinculadas aos projetos ativos"
       />
-      <StatCard icon={Droplets} value={springs} label="Nascentes (página)" tone="accent" />
+      <StatCard
+        icon={LandPlot}
+        value={totalAreaHa === null ? 'Não informado' : `${formatNumber(totalAreaHa)} ha`}
+        label="Área total ativa"
+        tone="accent"
+        hint="Área das propriedades ativas, sem duplicidade"
+      />
     </motion.div>
   );
 }

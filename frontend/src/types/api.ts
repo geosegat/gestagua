@@ -2,12 +2,41 @@
 
 export type ProjectStatus = "em_execucao" | "cancelado" | "arquivado" | (string & {});
 
+export interface DashboardModality {
+  id: string;
+  name: string;
+  code: string;
+  totalImplementations: number;
+  totalProjects: number;
+  plannedAreaHa: number;
+  executedAreaHa: number;
+}
+
+export interface DashboardResponse {
+  program: string;
+  dataSource: string;
+  filters: {
+    year: number | null;
+    availableYears: number[];
+  };
+  summary: {
+    activeProjects: number;
+    activeProperties: number;
+    totalAreaHa: number;
+    nativeVegetationAreaHa: number;
+    totalSprings: number;
+    totalImplementations: number;
+  };
+  modalities: DashboardModality[];
+}
+
 export interface Project {
   id: string;
   contract: string | null;
   status: ProjectStatus;
   contractSigned: boolean | null;
   contractIssueDate: string | null;
+  referenceYear: number;
   updatedAt?: string | null;
   stage: string | null;
   macroStage: string | null;
@@ -275,8 +304,88 @@ export interface Pagination {
 export interface ProjectsResponse {
   program: string;
   dataSource: string;
+  filters: {
+    year: number | null;
+  };
   pagination: Pagination;
   projects: Project[];
+}
+
+export interface IndicatorModality {
+  id: string;
+  name: string;
+  code: string;
+  implementations: number;
+  plannedAreaHa: number;
+  restoredAreaHa: number;
+  restoredAreaFilled: number;
+  appPlannedAreaHa: number;
+  appAreaFilled: number;
+}
+
+export interface IndicatorsResponse {
+  program: {
+    id: string;
+    name: string;
+  };
+  dataSource: string;
+  filters: {
+    year: number | null;
+    availableYears: number[];
+  };
+  scope: {
+    activeProjects: number;
+  };
+  land: {
+    totalImplementations: number;
+    plannedAreaHa: number;
+    restoredAreaHa: number;
+    restoredAreaCoverage: {
+      filled: number;
+      total: number;
+    };
+    appPlannedAreaHa: number;
+    appAreaCoverage: {
+      filled: number;
+      total: number;
+    };
+    byModality: IndicatorModality[];
+  };
+  payments: {
+    totalInstallments: number;
+    executedInstallments: number;
+    paidInstallments: number;
+    executedNotPaid: number;
+    paidNotExecuted: number;
+    recordedPaidAmount: number;
+    paidAmountCoverage: {
+      filled: number;
+      total: number;
+    };
+  };
+  carbon: {
+    totalStoredCarbon: number | null;
+    calculationStatus: 'business_rule_required' | (string & {});
+    reason: string;
+    coverage: {
+      landCulturesWithCarbonData: number;
+      landCulturesWithPositiveCarbon: number;
+      totalLandCultures: number;
+    };
+    cultures: Array<{
+      id: string;
+      name: string;
+      landCultures: number;
+      areaHa: number;
+      quantity: number;
+      productivityRows: number;
+      storedCarbonRows: number;
+      positiveStoredCarbonRows: number;
+      minimumStoredCarbon: number | null;
+      maximumStoredCarbon: number | null;
+      units: string[];
+    }>;
+  };
 }
 
 export interface Producer {
@@ -302,6 +411,8 @@ export interface Property {
   totalAreaHa: number | null;
   nativeVegetationAreaHa: number | null;
   totalSprings: number | null;
+  ruralEnvironmentalRegistry: string | null;
+  ruralEnvironmentalRegistryStatus: string | null;
   totalProjects: number;
   location: {
     municipality: string | null;

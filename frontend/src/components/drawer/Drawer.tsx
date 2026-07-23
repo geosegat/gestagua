@@ -1,4 +1,4 @@
-import { ChevronsLeft, ChevronsRight, Droplets, LogOut, X } from 'lucide-react';
+import { ChevronsLeft, ChevronsRight, Droplets, LogOut, X } from '../../icons';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import type { BrandingConfig, NavSection } from '../../types';
@@ -21,7 +21,7 @@ interface DrawerBodyProps {
   onSignOut: () => void;
 }
 
-/** Miolo do drawer (logo, navegação, sair) — compartilhado entre o rail de
+/** Miolo do drawer (logo, navegação, sair) - compartilhado entre o rail de
  * desktop e o overlay de mobile; só a moldura ao redor muda. */
 function DrawerBody({
   branding,
@@ -35,7 +35,7 @@ function DrawerBody({
     <>
       {/* topo: logo + nome + controle (pin no desktop, X no mobile) */}
       <div className="flex h-16 shrink-0 items-center gap-3 border-b border-on-brand/10 px-3.5">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-on-brand/10">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden">
           {branding.logoUrl ? (
             <img
               src={branding.logoUrl}
@@ -152,7 +152,7 @@ export default function Drawer({
   function signOut() {
     clearKey();
     dispatch(gestaguaApi.util.resetApiState());
-    navigate('/login', { replace: true });
+    navigate('/', { replace: true });
   }
 
   const mobileAsideRef = useRef<HTMLElement>(null);
@@ -199,7 +199,7 @@ export default function Drawer({
 
   return (
     <>
-      {/* rail de desktop — some completamente abaixo de md, o overlay de
+      {/* rail de desktop - some completamente abaixo de md, o overlay de
           mobile assume a navegação nesse ponto */}
       <div
         className="hidden h-full shrink-0 overflow-hidden bg-brand text-on-brand transition-[width] duration-200 ease-out md:block"
@@ -228,7 +228,7 @@ export default function Drawer({
         </aside>
       </div>
 
-      {/* overlay de mobile — sempre aberto (sem rail colapsado), fecha ao
+      {/* overlay de mobile - sempre aberto (sem rail colapsado), fecha ao
           navegar, tocar no fundo ou apertar Esc */}
       {mobileOpen && (
         <>

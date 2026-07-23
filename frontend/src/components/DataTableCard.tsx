@@ -1,6 +1,6 @@
-import { ChevronDown, ChevronLeft, ChevronRight, Search, Table2 } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight, Search, Table2 } from '../icons';
 import type { ReactNode } from 'react';
-import { formatNumber, mirrorLabel } from '../lib/format';
+import { formatNumber } from '../lib/format';
 import type { PaginatedList } from '../types';
 
 // MODELO do ARVO (medidas), CORES do GestAgua nos ACENTOS (título/números).
@@ -8,7 +8,7 @@ import type { PaginatedList } from '../types';
 const TH = 'px-6 py-1.5 text-left text-[14px] font-medium text-[#4b5563]';
 const TD = 'h-20 px-6 align-middle text-[14px]';
 
-// Tons NEUTROS da tabela copiados do ARVO (gray100/200) — o tint petrol deixava
+// Tons NEUTROS da tabela copiados do ARVO (gray100/200) - o tint petrol deixava
 // o cabeçalho "azulado". Marca fica só nos acentos, não nas superfícies.
 const BORDER = 'border-[#e0e2e7]'; // bordas de card / busca / seletor (gray200)
 const ROW_LINE = 'border-[#f0f2f5]'; // divisórias entre linhas (gray100)
@@ -47,7 +47,7 @@ interface Props<T> {
  * Card de listagem no estilo ARVO: cabeçalho branco com busca, faixa de colunas
  * TRANSPARENTE e linhas brancas.
  *
- * O branco vive nos blocos (busca / tbody / rodapé), NUNCA no container — assim
+ * O branco vive nos blocos (busca / tbody / rodapé), NUNCA no container - assim
  * o `thead` deixa o fundo da tela atravessar e a faixa lê como um recorte no
  * card, que é o efeito do ARVO. Pintar o `thead` de bg-paper não funciona: o
  * body tem um wash de marca, então a cor chapada nunca casa com o entorno.
@@ -63,11 +63,11 @@ export default function DataTableCard<T>({
   filters,
   onRowClick,
 }: Props<T>) {
-  const { items, loading, page, totalPages, total, itemsPerPage, dataSource } = list;
+  const { items, loading, page, totalPages, total, itemsPerPage } = list;
 
   return (
     <div className={`animate-rise overflow-hidden rounded-[8px] border ${BORDER}`}>
-      {/* ícone + título + busca — SEMPRE na mesma linha (como o ARVO, sem
+      {/* ícone + título + busca - SEMPRE na mesma linha (como o ARVO, sem
           flex-wrap): título à esquerda, busca à direita */}
       <div className="flex flex-wrap items-center justify-between gap-3 bg-card p-4 sm:gap-4">
         <div className="flex shrink-0 items-center gap-2 text-brand-deep">
@@ -76,7 +76,7 @@ export default function DataTableCard<T>({
         </div>
 
         {/* SearchContainer: borda 1px, radius 4px, padding 12px, input 220px/16px
-            (16px é proposital — abaixo disso o Safari iOS dá zoom ao focar) */}
+            (16px é proposital - abaixo disso o Safari iOS dá zoom ao focar) */}
         <div
           className={`flex w-full items-center gap-2 rounded-[4px] border bg-card p-3 sm:w-auto sm:shrink-0 ${BORDER}`}
         >
@@ -114,14 +114,14 @@ export default function DataTableCard<T>({
 
       {!loading && items.length > 0 && (
         <>
-          {/* mobile (< sm): cards empilhados — sem colunas lado a lado, sem
+          {/* mobile (< sm): cards empilhados - sem colunas lado a lado, sem
               rolagem lateral. Mostra TODAS as colunas (ignora hideBelow, que
               só faz sentido pra tabela) já que espaço vertical é barato.
               <ul>/<li> + <dl>/<dt>/<dd> no lugar de <div>s soltos: mantém
               pra leitor de tela a mesma ideia de "lista de registros, cada
               um com pares campo/valor" que a <table> dava antes (o preflight
               do Tailwind zera list-style, e o Safari/VoiceOver historicamente
-              lê isso como perda de papel de lista — daí o role="list" explícito). */}
+              lê isso como perda de papel de lista - daí o role="list" explícito). */}
           <ul role="list" className={`divide-y bg-card ${ROW_LINE} sm:hidden`}>
             {items.map((row) => (
               <li
@@ -145,7 +145,7 @@ export default function DataTableCard<T>({
               >
                 <dl>
                   {columns.map((column) => {
-                    // tdClassName foi pensado pra célula de tabela de altura fixa —
+                    // tdClassName foi pensado pra célula de tabela de altura fixa -
                     // "whitespace-nowrap" ali evita quebra de linha estranha numa
                     // linha de 80px. No card empilhado não existe essa restrição de
                     // altura, então nowrap só serve pra vazar texto comprido por
@@ -251,9 +251,6 @@ export default function DataTableCard<T>({
           )}
           <span className="text-[14px] font-semibold text-ink-soft">
             {items.length} de {formatNumber(total)} itens
-          </span>
-          <span className="hidden text-[12px] text-ink-soft/70 sm:inline">
-            · espelho de {mirrorLabel(dataSource)}
           </span>
         </div>
 

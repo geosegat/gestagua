@@ -1,8 +1,8 @@
 /** Config de white-label editável pelo admin (persistida em localStorage / JSON). */
 export interface BrandingColors {
-  /** Cor da marca — pinta o drawer, botões, títulos ("a parte verde" do MVGI). */
+  /** Cor da marca - pinta o drawer, botões, títulos ("a parte verde" do MVGI). */
   primary: string;
-  /** Cor de destaque — chips, hovers suaves, detalhes. */
+  /** Cor de destaque - chips, hovers suaves, detalhes. */
   accent: string;
 }
 
@@ -13,7 +13,8 @@ export interface NavOverride {
 }
 
 export interface BrandingConfig {
-  version: 1;
+  /** v2 introduziu o logo do programa como padrão (antes o padrão era "sem logo"). */
+  version: 2;
   productName: string;
   productSubtitle: string;
   /** Data-URL ou URL de imagem; null usa o ícone padrão. */

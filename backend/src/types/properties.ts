@@ -9,6 +9,8 @@ export interface PropertyRow extends QueryResultRow {
   totalArea: Numeric;
   nativeVegetationArea: Numeric;
   totalSprings: number | null;
+  ruralEnvironmentalRegistry: string | null;
+  ruralEnvironmentalRegistryStatus: string | null;
   total_projetos: number;
   city: string | null;
   state: string | null;
@@ -24,6 +26,8 @@ export interface Property {
   totalAreaHa: Numeric;
   nativeVegetationAreaHa: Numeric;
   totalSprings: number | null;
+  ruralEnvironmentalRegistry: string | null;
+  ruralEnvironmentalRegistryStatus: string | null;
   totalProjects: number;
   location: {
     municipality: string | null;

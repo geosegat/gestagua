@@ -7,7 +7,7 @@ import {
   Ruler,
   Sprout,
   Trees,
-} from 'lucide-react';
+} from '../../icons';
 import { useEffect, useState, type ReactNode } from 'react';
 import {
   type ProjectModality,
@@ -16,14 +16,12 @@ import {
 } from '../../types';
 import { getApiErrorMessage } from '../../lib/apiError';
 import { formatDate, formatNumber } from '../../lib/format';
+import {
+  modalityClassification,
+  modalityPresentation,
+} from '../../lib/modalities';
 import { useGetProjectModalitiesQuery } from '../../services/gestaguaApi';
 import ApiErrorBanner from '../ApiErrorBanner';
-
-const MODALITY_TYPE_LABELS: Record<string, string> = {
-  productive: 'Produtiva',
-  conservation: 'Conservacionista',
-  physical_intervention: 'Intervenção física',
-};
 
 const SUPPLY_TYPE_LABELS: Record<string, string> = {
   planned_project: 'Planejado pelo projeto',
@@ -75,15 +73,15 @@ const ARRANGEMENT_TYPE_LABELS: Record<string, string> = {
 };
 
 function valueOrDash(value: ReactNode): ReactNode {
-  return value === null || value === undefined || value === '' ? '—' : value;
+  return value === null || value === undefined || value === '' ? 'Não informado' : value;
 }
 
 function translated(labels: Record<string, string>, value: string | null): string {
-  return value ? (labels[value] ?? value) : '—';
+  return value ? (labels[value] ?? value) : 'Não informado';
 }
 
 function quantityLabel(resource: ProjectModalityResource): string {
-  if (resource.quantity === null) return '—';
+  if (resource.quantity === null) return 'Não informado';
   const unit = resource.unitAbbreviation ?? resource.unitOfMeasurement ?? '';
   return `${formatNumber(resource.quantity)}${unit ? ` ${unit}` : ''}`;
 }
@@ -204,6 +202,7 @@ function ModalityCard({
   onToggle: () => void;
 }) {
   const contentId = `modalidade-${item.id}`;
+  const presentation = modalityPresentation(item.modality);
   const resourceCount =
     item.resources.length + item.cultures.reduce((total, culture) => total + culture.resources.length, 0);
 
@@ -228,13 +227,20 @@ function ModalityCard({
             <span className="rounded-full bg-paper px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.08em] text-brand">
               {item.modality.code}
             </span>
+            <span
+              className={`text-[9px] font-semibold uppercase tracking-[0.08em] ${
+                presentation.official ? 'text-brand/65' : 'text-warn'
+              }`}
+            >
+              {modalityClassification(presentation)}
+            </span>
           </div>
           <h3 className="mt-1 font-display text-[15px] font-semibold text-brand-deep sm:text-[16px]">
-            {item.modality.name}
+            {presentation.title}
           </h3>
 
           <div className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1.5 text-[10.5px] text-ink-soft">
-            <span>{translated(MODALITY_TYPE_LABELS, item.modality.type)}</span>
+            {presentation.detail && <span>{presentation.detail}</span>}
             {item.areaHa !== null && <span>{formatNumber(item.areaHa)} ha planejados</span>}
             {item.executedAreaHa !== null && <span>{formatNumber(item.executedAreaHa)} ha executados</span>}
             {item.cultures.length > 0 && <span>{item.cultures.length} culturas</span>}
@@ -357,7 +363,7 @@ export default function ProjectModalitiesSection({ projectId }: { projectId: str
           <div>
             <h2 className="font-display text-[16px] font-semibold text-brand-deep">Modalidades</h2>
             <p className="mt-0.5 max-w-2xl text-[12px] leading-5 text-ink-soft">
-              Áreas de implantação, culturas, arranjos e recursos previstos no projeto.
+              Enquadramento do Decreto 14.210/2026, áreas, culturas e recursos do projeto.
             </p>
           </div>
         </div>

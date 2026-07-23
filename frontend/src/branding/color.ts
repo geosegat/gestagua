@@ -54,7 +54,7 @@ function hslToHex(h: number, s: number, l: number): string {
   );
 }
 
-/** Luminância relativa (WCAG) — decide texto claro ou escuro sobre a cor. */
+/** Luminância relativa (WCAG) - decide texto claro ou escuro sobre a cor. */
 function luminance(hex: string): number {
   const lin = hexToRgb(hex).map((v) => {
     const c = v / 255;
@@ -77,7 +77,7 @@ export function derivePalette(primary: string, accent: string): Record<string, s
 
   return {
     '--brand-primary': p,
-    // fundo mais fundo (gradientes, header do modal)
+    // tom mais fundo da primária (hover de botão sólido, títulos de página)
     '--brand-primary-deep': hslToHex(ph, ps, Math.max(pl - (isLight ? 14 : 9), 3)),
     // hover/selected dentro do drawer (um passo pro claro em fundos escuros)
     '--brand-primary-hover': isLight

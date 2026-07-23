@@ -7,6 +7,8 @@ import {
 } from '@reduxjs/toolkit/query/react';
 import { clearKey, getKey } from '../lib/auth';
 import type {
+  DashboardResponse,
+  IndicatorsResponse,
   MobilizationsResponse,
   ProducersResponse,
   ProgramsResponse,
@@ -17,9 +19,10 @@ import type {
   ProjectStageActivitiesResponse,
   ProjectStagesResponse,
   PropertiesResponse,
-  AllProjectsResponse,
+  PublicPortalResponse,
   PageParams,
   ProjectPageParams,
+  YearParams,
 } from '../types';
 
 const rawBaseQuery = fetchBaseQuery({
@@ -53,7 +56,15 @@ export const gestaguaApi = createApi({
   baseQuery: baseQueryWithAuth,
   keepUnusedDataFor: 300,
   refetchOnReconnect: true,
-  tagTypes: ['Project', 'Projects', 'Producers', 'Properties', 'Mobilizations', 'Programs'],
+  tagTypes: [
+    'Project',
+    'Projects',
+    'Indicators',
+    'Producers',
+    'Properties',
+    'Mobilizations',
+    'Programs',
+  ],
   endpoints: (builder) => ({
     validateKey: builder.mutation<void, string>({
       query: (key) => ({
@@ -63,36 +74,38 @@ export const gestaguaApi = createApi({
       }),
     }),
     getProjects: builder.query<ProjectsResponse, ProjectPageParams>({
-      query: ({ page, limit, search, status }) => ({
+      query: ({ page, limit, search, status, year }) => ({
         url: '/projetos',
-        params: { page, limit, ...(search ? { busca: search } : {}), ...(status ? { status } : {}) },
+        params: {
+          page,
+          limit,
+          ...(search ? { busca: search } : {}),
+          ...(status ? { status } : {}),
+          ...(year ? { ano: year } : {}),
+        },
       }),
       providesTags: ['Projects'],
     }),
-    getAllProjects: builder.query<AllProjectsResponse, void>({
-      async queryFn(_arg, _api, _extraOptions, fetchWithBQ) {
-        const firstResult = await fetchWithBQ({
-          url: '/projetos',
-          params: { page: 1, limit: 100 },
-        });
-        if (firstResult.error) return { error: firstResult.error };
-
-        const first = firstResult.data as ProjectsResponse;
-        const projects = [...first.projects];
-        const totalPages = Math.min(first.pagination.totalPages, 10);
-
-        for (let page = 2; page <= totalPages; page += 1) {
-          const pageResult = await fetchWithBQ({
-            url: '/projetos',
-            params: { page, limit: 100 },
-          });
-          if (pageResult.error) return { error: pageResult.error };
-          projects.push(...(pageResult.data as ProjectsResponse).projects);
-        }
-
-        return { data: { projects, dataSource: first.dataSource } };
-      },
+    // portal público: sem chave; o backend só devolve agregados curados
+    getPublicPortal: builder.query<PublicPortalResponse, YearParams>({
+      query: ({ year }) => ({
+        url: '/publico/portal',
+        params: year ? { ano: year } : undefined,
+      }),
+    }),
+    getDashboardSummary: builder.query<DashboardResponse, YearParams>({
+      query: ({ year }) => ({
+        url: '/dashboard',
+        params: year ? { ano: year } : undefined,
+      }),
       providesTags: ['Projects'],
+    }),
+    getIndicators: builder.query<IndicatorsResponse, YearParams>({
+      query: ({ year }) => ({
+        url: '/indicadores',
+        params: year ? { ano: year } : undefined,
+      }),
+      providesTags: ['Indicators'],
     }),
     getProject: builder.query<ProjectDetail, string>({
       query: (id) => `/projetos/${id}`,
@@ -152,7 +165,9 @@ export const gestaguaApi = createApi({
 export const {
   useValidateKeyMutation,
   useGetProjectsQuery,
-  useGetAllProjectsQuery,
+  useGetPublicPortalQuery,
+  useGetDashboardSummaryQuery,
+  useGetIndicatorsQuery,
   useGetProjectQuery,
   useGetProjectInstallmentsQuery,
   useGetProjectModalitiesQuery,

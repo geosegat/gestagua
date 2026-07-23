@@ -4,7 +4,7 @@ import {
   ClipboardCheck,
   MapPin,
   UserRound,
-} from 'lucide-react';
+} from '../../icons';
 import { NavLink, useNavigate } from 'react-router-dom';
 import type { ProjectDetail } from '../../types';
 import StatusBadge from '../StatusBadge';
@@ -16,7 +16,7 @@ const TABS = [
 ] as const;
 
 function valueOrDash(value: string | null | undefined): string {
-  return value?.trim() || '—';
+  return value?.trim() || 'Não informado';
 }
 
 export default function ProjectInternalHeader({

@@ -3,7 +3,7 @@ import {
   FileText,
   LandPlot,
   Waves,
-} from 'lucide-react';
+} from '../icons';
 import type { ReactNode } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import ProjectModalitiesSection from '../components/project/ProjectModalitiesSection';
@@ -25,7 +25,7 @@ const OWNERSHIP_LABELS: Record<string, string> = {
 };
 
 function display(value: ReactNode): ReactNode {
-  return value === null || value === undefined || value === '' ? '—' : value;
+  return value === null || value === undefined || value === '' ? 'Não informado' : value;
 }
 
 function InfoField({ label, value, wide = false }: { label: string; value: ReactNode; wide?: boolean }) {

@@ -8,7 +8,7 @@ import { useGetProgramsQuery } from '../services/gestaguaApi';
 const PAGE_SIZES = [10, 50, 100];
 
 function formatDuration(duration: number | null): string {
-  if (duration === null) return '—';
+  if (duration === null) return 'Não informado';
   return `${formatNumber(duration)} ${duration === 1 ? 'dia' : 'dias'}`;
 }
 
@@ -33,7 +33,7 @@ const COLUMNS: Column<Program>[] = [
     header: 'Nome Proponente',
     cell: (program) => {
       const url = getSafeUrl(program.proponentUrl);
-      const name = program.proponentName || '—';
+      const name = program.proponentName || 'Não informado';
 
       return url ? (
         <a

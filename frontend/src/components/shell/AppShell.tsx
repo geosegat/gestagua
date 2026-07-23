@@ -15,7 +15,7 @@ export default function AppShell() {
     setMobileNavOpen(false);
   }, [location.pathname]);
 
-  // devolve o foco pro botão de hambúrguer ao fechar (Esc, backdrop, link) —
+  // devolve o foco pro botão de hambúrguer ao fechar (Esc, backdrop, link) -
   // sem isso o foco do teclado "cai" pro topo da página
   function closeMobileNav() {
     setMobileNavOpen(false);
@@ -31,7 +31,7 @@ export default function AppShell() {
           <Outlet />
         </div>
         <footer className="pb-8 text-center text-[12px] text-ink-soft">
-          MVGI · espelho diário somente leitura · dados pessoais não trafegam por esta API
+          Consulta somente leitura · dados atualizados diariamente
         </footer>
       </main>
     </div>

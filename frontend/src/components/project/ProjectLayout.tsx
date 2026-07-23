@@ -1,4 +1,4 @@
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from '../../icons';
 import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { getApiErrorMessage } from '../../lib/apiError';
 import { useGetProjectQuery } from '../../services/gestaguaApi';

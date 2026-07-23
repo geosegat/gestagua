@@ -13,7 +13,13 @@ import type {
   TotalRow,
 } from '../types';
 import { parsePagination } from '../utils/pagination';
-import { UUID_RE } from '../utils/validation';
+import { parseOptionalYear, UUID_RE } from '../utils/validation';
+
+const PROJECT_YEAR_SQL = `
+  EXTRACT(
+    YEAR FROM COALESCE(p."contractIssuanceDate"::timestamp, p."createdAt")
+  )::int
+`;
 
 export const STATUS_PT = {
   executing: 'em_execucao',
@@ -35,6 +41,7 @@ function mapProject(row: ProjectRow): Project {
     contract: row.contractNumber,
     status: translateStatus(row.status),
     contractIssueDate: row.contractIssuanceDate,
+    referenceYear: row.referenceYear,
     contractSigned: row.contractSigned,
     updatedAt: row.updatedAt,
     macroStage: row.etapa_nome,
@@ -69,6 +76,7 @@ const BASE_FROM = `
 
 const BASE_SELECT = `
   SELECT p.id, p."contractNumber", p.status, p."contractIssuanceDate",
+         ${PROJECT_YEAR_SQL} AS "referenceYear",
          p."contractSigned", p."updatedAt",
          s.name  AS stage_name,
          e.nome  AS etapa_nome,
@@ -81,6 +89,7 @@ const BASE_SELECT = `
 
 const DETAIL_SELECT = `
   SELECT p.id, p."contractNumber", p.status, p."contractIssuanceDate",
+         ${PROJECT_YEAR_SQL} AS "referenceYear",
          p."contractSigned", p."updatedAt", p."portalId", p."revisionNumber",
          p.questionnaire, p."reasonForRevision", p.action,
          p."signatureLocation", p.notes,
@@ -153,7 +162,14 @@ export async function listar(
 ): Promise<Response | void> {
     const { page, limit, offset } = parsePagination(req.query);
 
-    const params: string[] = [config.gestaguaProgramId];
+    const parsedYear = parseOptionalYear(req.query.ano);
+    if (!parsedYear.valid) {
+      return res.status(400).json({
+        erro: 'ano invalido. Use quatro digitos entre 1900 e 2100',
+      });
+    }
+
+    const params: Array<string | number> = [config.gestaguaProgramId];
     let where = '';
 
     if (req.query.status) {
@@ -175,6 +191,11 @@ export async function listar(
 
       params.push(rawStatus);
       where = ` AND p.status = $${params.length}`;
+    }
+
+    if (parsedYear.year !== null) {
+      params.push(parsedYear.year);
+      where += ` AND ${PROJECT_YEAR_SQL} = $${params.length}`;
     }
 
     const busca = (req.query.busca ?? '').trim();
@@ -211,6 +232,9 @@ export async function listar(
     return res.json({
       program: 'Gestagua',
       dataSource: getCurrentDb(),
+      filters: {
+        year: parsedYear.year,
+      },
       pagination: {
         page,
         perPage: limit,

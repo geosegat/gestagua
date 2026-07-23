@@ -6,7 +6,7 @@ import AppShell from './components/shell/AppShell';
 import ProjectLayout from './components/project/ProjectLayout';
 import { getKey } from './lib/auth';
 import { ALL_NAV_ITEMS } from './navigation/config';
-import LoginPage from './pages/LoginPage';
+import LandingPage from './pages/LandingPage';
 import MobilizationsPage from './pages/MobilizationsPage';
 import PersonalizationPage from './pages/PersonalizationPage';
 import PlaceholderPage from './pages/PlaceholderPage';
@@ -17,6 +17,7 @@ import ProjectInformationPage from './pages/ProjectInformationPage';
 import ProjectInstallmentsPage from './pages/ProjectInstallmentsPage';
 import ProjectStagesPage from './pages/ProjectStagesPage';
 import PropertiesPage from './pages/PropertiesPage';
+import PublicResultsPage from './pages/PublicResultsPage';
 import OverviewPage from './pages/Overview';
 import type { NavItem } from './types';
 
@@ -66,7 +67,12 @@ export default function App() {
     <BrandingProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/login" element={<LoginPage />} />
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/resultados" element={<PublicResultsPage />} />
+          {/* o acesso é um modal, não uma tela: /login abre a landing com ele
+              por cima, então links diretos e o redirect do RequireAuth seguem
+              funcionando */}
+          <Route path="/login" element={<LandingPage autoOpenLogin />} />
           <Route
             element={
               <RequireAuth>
@@ -74,7 +80,6 @@ export default function App() {
               </RequireAuth>
             }
           >
-            <Route index element={<Navigate to="/visao-geral" replace />} />
             <Route path="/projetos/:projectId" element={<ProjectLayout />}>
               <Route index element={<Navigate to="informacoes" replace />} />
               <Route path="informacoes" element={<ProjectInformationPage />} />

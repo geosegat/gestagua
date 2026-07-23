@@ -1,4 +1,4 @@
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw } from '../icons';
 import { INNER_CARD, RADIUS } from './Card';
 
 /** Banner de falha de rede com botão de retry, acima do conteúdo da tela. */
@@ -9,7 +9,7 @@ export default function ApiErrorBanner({
 }: {
   error: string;
   onRetry: () => void;
-  /** o texto antes do ':' — cada tela nomeia o que ela tentou fazer */
+  /** o texto antes do ':' - cada tela nomeia o que ela tentou fazer */
   message?: string;
 }) {
   return (

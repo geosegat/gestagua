@@ -1,4 +1,4 @@
-import { Menu } from 'lucide-react';
+import { Menu } from '../../icons';
 import type { Ref } from 'react';
 import { useBranding } from '../../branding/BrandingContext';
 

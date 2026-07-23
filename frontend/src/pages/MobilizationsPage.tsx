@@ -9,7 +9,7 @@ import { useGetMobilizationsQuery } from '../services/gestaguaApi';
 const PAGE_SIZES = [15, 50, 100];
 
 function locality(mobilization: Mobilization): string {
-  return mobilization.locality || mobilization.city || '—';
+  return mobilization.locality || mobilization.city || 'Não informado';
 }
 
 const COLUMNS: Column<Mobilization>[] = [
@@ -30,7 +30,7 @@ const COLUMNS: Column<Mobilization>[] = [
   },
   {
     header: 'Responsável',
-    cell: (mobilization) => mobilization.responsible || '—',
+    cell: (mobilization) => mobilization.responsible || 'Não informado',
   },
 ];
 

@@ -1,5 +1,4 @@
 import {
-  AppWindow,
   BarChart3,
   Droplets,
   LayoutDashboard,
@@ -8,11 +7,11 @@ import {
   Megaphone,
   Palette,
   Users,
-} from 'lucide-react';
+} from '../icons';
 import type { BrandingConfig, NavItem, NavSection } from '../types';
 
 /**
- * Menu do produto — dados, não código. Produto novo = outro array.
+ * Menu do produto - dados, não código. Produto novo = outro array.
  * O admin sobrepõe visibilidade/label via branding.nav (por id).
  */
 export const NAV_SECTIONS: NavSection[] = [
@@ -46,13 +45,6 @@ export const NAV_SECTIONS: NavSection[] = [
         path: '/personalizacao',
         locked: true,
       },
-    ],
-  },
-  {
-    id: 'utilities',
-    title: 'Utilitários',
-    items: [
-      { id: 'program', label: 'Programa', icon: AppWindow, path: '/program' },
     ],
   },
 ];

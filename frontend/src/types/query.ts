@@ -1,4 +1,4 @@
-import type { Pagination, Project } from './api';
+import type { Pagination } from './api';
 
 export interface PageParams {
   page: number;
@@ -8,11 +8,11 @@ export interface PageParams {
 
 export interface ProjectPageParams extends PageParams {
   status?: string;
+  year?: number | null;
 }
 
-export interface AllProjectsResponse {
-  projects: Project[];
-  dataSource: string;
+export interface YearParams {
+  year?: number | null;
 }
 
 export interface PageData<T> {

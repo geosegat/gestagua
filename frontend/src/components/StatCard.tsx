@@ -1,23 +1,23 @@
 import { animate, motion } from 'framer-motion';
-import { Info, type LucideIcon } from 'lucide-react';
+import { Info, type RemixiconComponentType } from '../icons';
 import { useEffect, useState } from 'react';
 import { formatNumber } from '../lib/format';
 import { EASE, riseIn } from '../lib/motion';
-import { CARD, CARD_ELEVATION, INNER_CARD } from './Card';
+import { CARD, CARD_ELEVATION } from './Card';
 
-/** Cor da métrica. Vive no chip do ícone, nunca no número. */
+/** Cor da métrica. Vive somente no traço do ícone, nunca no número. */
 export type Tone = 'brand' | 'accent' | 'ok' | 'bad' | 'warn';
 
 const TONES: Record<Tone, string> = {
-  brand: 'bg-brand-soft text-brand',
-  accent: 'bg-accent-soft text-accent',
-  ok: 'bg-ok-bg text-ok',
-  bad: 'bg-bad-bg text-bad',
-  warn: 'bg-warn-bg text-warn',
+  brand: 'text-brand',
+  accent: 'text-accent',
+  ok: 'text-ok',
+  bad: 'text-bad',
+  warn: 'text-warn',
 };
 
 /**
- * Número contando de 0 até o valor. Texto (`10/10`, `—`) passa direto: só
+ * Número contando de 0 até o valor. Texto (`10/10`, `-`) passa direto: só
  * contagem tem "de onde" contar.
  */
 function AnimatedValue({ value, suffix = '' }: { value: number | string; suffix?: string }) {
@@ -50,7 +50,7 @@ interface Base {
   label: string;
   tone: Tone;
   /** sem ícone o card fica só com número + rótulo */
-  icon?: LucideIcon;
+  icon?: RemixiconComponentType;
 }
 
 /**
@@ -70,10 +70,8 @@ export function StatCard({
       {(Icon || hint) && (
         <div className="mb-4 flex items-start justify-between">
           {Icon && (
-            <span
-              className={`flex h-10 w-10 items-center justify-center ${INNER_CARD} ${TONES[tone]}`}
-            >
-              <Icon size={19} strokeWidth={2.2} />
+            <span className={`inline-flex ${TONES[tone]}`}>
+              <Icon size={23} />
             </span>
           )}
           {hint && (
@@ -102,10 +100,8 @@ export function MiniStat({ icon: Icon, value, suffix, label, tone }: Base) {
       className={`flex items-center gap-3.5 px-4 py-3.5 ${CARD} ${CARD_ELEVATION}`}
     >
       {Icon && (
-        <span
-          className={`flex h-9 w-9 shrink-0 items-center justify-center ${INNER_CARD} ${TONES[tone]}`}
-        >
-          <Icon size={17} strokeWidth={2.2} />
+        <span className={`inline-flex shrink-0 ${TONES[tone]}`}>
+          <Icon size={20} />
         </span>
       )}
       <div className="min-w-0">

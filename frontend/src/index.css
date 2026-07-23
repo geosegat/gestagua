@@ -6,11 +6,11 @@
 @source './pages/ProjectInstallmentsPage.tsx';
 
 /* ============================================================
-   Montserrat self-hosted — MESMOS arquivos do MVGI
+   Montserrat self-hosted - MESMOS arquivos do MVGI
    (src/assets/fonts). Sem dependência de Google Fonts/rede
    externa: funciona em VPS sem saída pra internet.
    O MVGI só usa os cortes Medium (500) e SemiBold (600); as
-   faixas abaixo mapeiam 100–500 → Medium e 600–900 → SemiBold,
+   faixas abaixo mapeiam 100-500 para Medium e 600-900 para SemiBold,
    então 400/700 renderizam igual ao MVGI, sem bold sintético.
    ============================================================ */
 @font-face {
@@ -56,7 +56,7 @@
 }
 
 /* ============================================================
-   Tokens de MARCA (white-label) — resolvem CSS variables em
+   Tokens de MARCA (white-label) - resolvem CSS variables em
    runtime; o BrandingProvider troca os --brand-* no :root e o
    produto inteiro recolore. `inline` mantém o var() no CSS final.
    ============================================================ */
@@ -69,7 +69,7 @@
   --color-accent: var(--brand-accent);
   --color-accent-soft: var(--brand-accent-soft);
 
-  /* aliases legados — os componentes escritos com petrol/aqua
+  /* aliases legados - os componentes escritos com petrol/aqua
      seguem a marca automaticamente */
   --color-petrol: var(--brand-primary);
   --color-petrol-deep: var(--brand-primary-deep);
@@ -77,7 +77,7 @@
   --color-aqua-soft: var(--brand-accent-soft);
 }
 
-/* Defaults da marca (Gestágua) — valem antes do JS aplicar o tema salvo */
+/* Defaults da marca (Gestágua) - valem antes do JS aplicar o tema salvo */
 :root {
   --brand-primary: #0c4a55;
   --brand-primary-deep: #07333c;
@@ -102,16 +102,15 @@ body {
   margin: 0;
   font-family: var(--font-sans);
   color: var(--color-ink);
+  /* Cor chapada: sem gradiente e sem padrão de fundo. Além da decisão de
+     design, o thead das tabelas é transparente (efeito ARVO) e qualquer coisa
+     desenhada atrás atravessaria a tira do cabeçalho, presa à viewport e
+     desalinhada das linhas da tabela. */
   background: var(--color-paper);
-  /* Só o wash da marca no topo. Sem listras: o thead das tabelas é transparente
-     (efeito ARVO) e qualquer padrão repetido atravessaria a tira do cabeçalho,
-     preso à viewport e desalinhado das linhas da tabela. */
-  background-image:
-    radial-gradient(ellipse 80% 50% at 50% -10%, color-mix(in srgb, var(--brand-accent) 10%, transparent), transparent);
 }
 
 /* ============================================================
-   Scrollbars da marca — seguem os --brand-* como o resto do
+   Scrollbars da marca - seguem os --brand-* como o resto do
    produto (o BrandingProvider troca essas vars no :root e a
    barra recolore em runtime, sem JS extra). `.brand-scroll` em
    superfícies claras; `-inverse` no drawer, que tem fundo da cor

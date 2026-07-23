@@ -1,12 +1,12 @@
 import type { ProjectStatus } from '../types';
 
 export function formatNumber(n: number | null | undefined): string {
-  return n === null || n === undefined ? '—' : Number(n).toLocaleString('pt-BR');
+  return n === null || n === undefined ? 'Não informado' : Number(n).toLocaleString('pt-BR');
 }
 
 export function formatCurrency(n: number | null | undefined): string {
   return n === null || n === undefined
-    ? '—'
+    ? 'Não informado'
     : Number(n).toLocaleString('pt-BR', {
         style: 'currency',
         currency: 'BRL',
@@ -16,13 +16,13 @@ export function formatCurrency(n: number | null | undefined): string {
 }
 
 export function formatDate(d: string | null | undefined): string {
-  if (!d) return '—';
+  if (!d) return 'Não informado';
   const dt = new Date(d);
   return isNaN(dt.getTime()) ? d : dt.toLocaleDateString('pt-BR');
 }
 
 export function formatDateTime(d: string | null | undefined): string {
-  if (!d) return '—';
+  if (!d) return 'Não informado';
   const dt = new Date(d);
   if (isNaN(dt.getTime())) return d;
 
@@ -40,12 +40,6 @@ export function formatDateTime(d: string | null | undefined): string {
     parts.find((part) => part.type === type)?.value ?? '';
 
   return `${value('day')}/${value('month')}/${value('year')} - ${value('hour')}:${value('minute')}`;
-}
-
-/** Converte o nome do banco do dia (mvgi_clone_2026_06_11) em data legivel. */
-export function mirrorLabel(db: string | null | undefined): string {
-  const m = /(\d{4})_(\d{2})_(\d{2})/.exec(db ?? '');
-  return m ? `${m[3]}/${m[2]}/${m[1]}` : (db ?? '—');
 }
 
 export const STATUS_LABEL: Record<string, string> = {
