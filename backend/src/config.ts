@@ -31,13 +31,19 @@ function envPath(name: string, fallbackRelative: string): string {
   return path.resolve(process.cwd(), target);
 }
 
+const frontendOrigins = [
+  'http://localhost:5174',
+  'http://127.0.0.1:5174',
+  'https://gestagua.vercel.app',
+  'https://gestagua.arvo.tec.br',
+];
+
 const config: AppConfig = {
   port: envInt('PORT', 8080),
   apiKey: envStr('API_KEY', ''),
-  allowedOrigins: envList('ALLOWED_ORIGINS', [
-    'http://localhost:5174',
-    'http://127.0.0.1:5174',
-  ]),
+  allowedOrigins: Array.from(
+    new Set([...frontendOrigins, ...envList('ALLOWED_ORIGINS', [])]),
+  ),
   gestaguaProgramId: 'e0c5918f-32a5-44bd-917d-ad43fd3111b0',
   pointerFile: envPath('POINTER_FILE', 'banco_ativo.txt'),
   logFile: envPath('LOG_FILE', 'api.log'),
