@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { LandPlot, MapPin, Search } from '../icons';
 import ApiErrorBanner from '../components/ApiErrorBanner';
 import { CARD } from '../components/Card';
@@ -72,18 +73,36 @@ export default function PropertyMapPage() {
   const [search, setSearch] = useState('');
   const searchRef = useRef<HTMLInputElement>(null);
 
+  // ?car=... na URL: veio de um clique na tela de Propriedades, pra abrir já
+  // focado nessa propriedade
+  const [searchParams] = useSearchParams();
+  const carParam = searchParams.get('car');
+
   function select(id: string) {
     setSelectedId(id);
     setFocusTrigger((n) => n + 1);
   }
 
-  // seleciona a primeira propriedade com geometria assim que as camadas carregam
+  // ao carregar (ou quando muda o ?car): foca a propriedade pedida na URL; sem
+  // ?car, foca a primeira com geometria
   useEffect(() => {
-    if (layers.length > 0 && selectedId === null) {
-      select(layers[0].id);
+    if (layers.length === 0) return;
+
+    if (carParam) {
+      const target = normalizeCarCode(carParam);
+      const wanted = properties.find((p) => {
+        const car = carOf(p);
+        return car && normalizeCarCode(car) === target && mapped.has(p.id);
+      });
+      if (wanted) {
+        select(wanted.id);
+        return;
+      }
     }
+
+    if (selectedId === null) select(layers[0].id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [layers]);
+  }, [layers, carParam]);
 
   const q = normalize(search.trim());
   const filteredProperties = q

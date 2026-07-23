@@ -4,18 +4,16 @@ import { useNavigate } from 'react-router-dom';
 import {
   CheckCircle2,
   Droplets,
-  Eye,
   FolderKanban,
   LandPlot,
   Leaf,
   MapPin,
-  RefreshCw,
   Users,
   WalletCards,
 } from '../icons';
 import { CARD } from '../components/Card';
 import PublicHeader, { PUBLIC_CONTAINER } from '../components/public/PublicHeader';
-import { CountUp, ResultStat } from '../components/public/Metric';
+import { ResultStat } from '../components/public/Metric';
 import PublicFooter from '../components/public/PublicFooter';
 import LoginDialog from '../components/public/LoginDialog';
 import YearFilter from '../components/YearFilter';
@@ -25,7 +23,12 @@ import { formatCurrency, formatNumber } from '../lib/format';
 import { modalityClassification, modalityPresentation } from '../lib/modalities';
 import { EASE, riseIn, stagger } from '../lib/motion';
 import { useYearFilter } from '../lib/useYearFilter';
-import { RECURSO_TOTAL_REAIS, projectedCo2 } from '../lib/program';
+import {
+  PARCELAS_EXECUTADAS,
+  RECURSO_TOTAL_REAIS,
+  REPASSES_POR_PROJETO,
+  projectedCo2,
+} from '../lib/program';
 import { useGetPublicPortalQuery } from '../services/gestaguaApi';
 
 /**
@@ -128,31 +131,6 @@ function RankedBars({ rows, unit }: { rows: BarRow[]; unit?: string }) {
   );
 }
 
-/** Número de destaque de uma faixa, com rótulo em caixa alta abaixo. */
-function BandStat({
-  value,
-  label,
-  hint,
-  started,
-}: {
-  value: number | null;
-  label: string;
-  hint?: string;
-  started: boolean;
-}) {
-  return (
-    <div className="px-5 first:pl-0 last:pr-0">
-      <div className="font-display text-[26px] font-semibold leading-none text-brand-deep">
-        <CountUp value={value} started={started} />
-      </div>
-      <div className="mt-2 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-ink-soft">
-        {label}
-      </div>
-      {hint && <div className="mt-1 text-[11.5px] text-ink-soft/80">{hint}</div>}
-    </div>
-  );
-}
-
 export default function PublicResultsPage() {
   const { year, setYear } = useYearFilter();
   const { data, isLoading, error, refetch } = useGetPublicPortalQuery({ year });
@@ -166,15 +144,14 @@ export default function PublicResultsPage() {
 
   const heroRef = useRef<HTMLDivElement>(null);
   const heroInView = useInView(heroRef, { once: true, margin: '-60px' });
-  const bandRef = useRef<HTMLDivElement>(null);
-  const bandInView = useInView(bandRef, { once: true, margin: '-60px' });
 
   const summary = data?.summary;
-  const finance = data?.finance;
   const restoration = data?.restoration;
   // mesmos indicadores da Visão Geral: área planejada, recurso total e CO₂
   const plannedAreaHa = restoration?.plannedAreaHa ?? null;
   const co2Projected = plannedAreaHa === null ? null : projectedCo2(plannedAreaHa);
+  // parcelas previstas = repasses por projeto × projetos ativos (2 × 20 = 40)
+  const parcelasPrevistas = REPASSES_POR_PROJETO * (summary?.activeProjects ?? 0);
   const errorMessage = error ? getApiErrorMessage(error) : null;
 
   const modalityRows: BarRow[] =
@@ -210,10 +187,6 @@ export default function PublicResultsPage() {
       label: String(point.year),
       value: point.projects,
     })) ?? [];
-
-  // valor repassado só vira manchete quando o espelho tem o dado; senão a
-  // seção mostra a execução das parcelas, que é o que existe de concreto
-  const hasPaidAmount = (finance?.recordedPaidAmount ?? 0) > 0;
 
   return (
     <div className="brand-scroll h-full overflow-y-auto">
@@ -326,41 +299,9 @@ export default function PublicResultsPage() {
         </motion.div>
       </section>
 
-      {/* faixa de alcance */}
-      {summary && (
-        <Section
-          kicker="Alcance"
-          title="Onde o programa está"
-          description="Propriedades rurais participantes e o território que elas somam. Os dados aparecem sempre agregados, sem identificar produtores ou localizações."
-        >
-          <div
-            ref={bandRef}
-            className={`${CARD} flex flex-wrap divide-line px-6 py-7 sm:divide-x`}
-          >
-            <BandStat
-              value={summary.activeProperties}
-              label="Propriedades atendidas"
-              started={bandInView}
-            />
-            <BandStat
-              value={data?.communities.length ?? 0}
-              label="Comunidades alcançadas"
-              started={bandInView}
-            />
-            <BandStat
-              value={summary.totalSprings}
-              label="Nascentes mapeadas"
-              started={bandInView}
-            />
-            <BandStat
-              value={restoration?.appAreaHa ?? 0}
-              label="Área de APP (ha)"
-              hint="Preservação permanente nas áreas dos projetos"
-              started={bandInView}
-            />
-          </div>
-        </Section>
-      )}
+      {/* faixa de alcance "Onde o programa está" (propriedades atendidas,
+          comunidades, nascentes, área de APP) removida por ora: esses números
+          só passam a existir no monitoramento, e hoje viriam todos em zero. */}
 
       {/* modalidades */}
       {modalityRows.length > 0 && (
@@ -395,36 +336,29 @@ export default function PublicResultsPage() {
       )}
 
       {/* execução financeira */}
-      {finance && (
+      {summary && (
         <Section
           kicker="Execução"
           title="Recursos e parcelas"
           description="O pagamento por serviços ambientais é feito em parcelas ao produtor, conforme a execução das etapas previstas no projeto."
         >
           <div className={`${CARD} p-6`}>
-            {hasPaidAmount ? (
-              <div className="mb-6 border-b border-line pb-6">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-soft">
-                  Recursos repassados aos produtores
-                </div>
-                <div className="mt-2 flex items-center gap-3">
-                  <WalletCards size={26} className="text-accent" />
-                  <span className="font-display text-[40px] font-semibold leading-none text-brand-deep">
-                    {formatCurrency(finance.recordedPaidAmount)}
-                  </span>
-                </div>
+            <div className="mb-6 border-b border-line pb-6">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-soft">
+                Recurso total do programa
               </div>
-            ) : (
-              <p className="mb-6 border-b border-line pb-6 text-[13px] leading-relaxed text-ink-soft">
-                Os valores repassados ainda não constam nos dados consultados, então esta seção
-                mostra a execução das parcelas registrada até agora.
-              </p>
-            )}
+              <div className="mt-2 flex items-center gap-3">
+                <WalletCards size={26} className="text-accent" />
+                <span className="font-display text-[40px] font-semibold leading-none text-brand-deep">
+                  {formatCurrency(RECURSO_TOTAL_REAIS)}
+                </span>
+              </div>
+            </div>
 
-            <div className="grid gap-5 sm:grid-cols-3">
+            <div className="grid gap-5 sm:grid-cols-2">
               <div>
                 <div className="font-display text-[24px] font-semibold leading-none text-brand-deep">
-                  {formatNumber(finance.totalInstallments)}
+                  {formatNumber(parcelasPrevistas)}
                 </div>
                 <div className="mt-2 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-ink-soft">
                   Parcelas previstas
@@ -432,18 +366,10 @@ export default function PublicResultsPage() {
               </div>
               <div>
                 <div className="font-display text-[24px] font-semibold leading-none text-brand-deep">
-                  {formatNumber(finance.executedInstallments)}
+                  {formatNumber(PARCELAS_EXECUTADAS)}
                 </div>
                 <div className="mt-2 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-ink-soft">
                   Parcelas executadas
-                </div>
-              </div>
-              <div>
-                <div className="font-display text-[24px] font-semibold leading-none text-brand-deep">
-                  {formatNumber(finance.paidInstallments)}
-                </div>
-                <div className="mt-2 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-ink-soft">
-                  Parcelas pagas
                 </div>
               </div>
             </div>
@@ -467,39 +393,21 @@ export default function PublicResultsPage() {
       {/* transparência */}
       <section className={`${PUBLIC_CONTAINER} mt-16`}>
         <motion.div
-          variants={stagger}
+          variants={riseIn}
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, margin: '-40px' }}
-          className="grid gap-6 border-y border-line py-8 sm:grid-cols-3"
+          className="flex justify-center gap-3.5 border-y border-line py-8"
         >
-          {[
-            {
-              icon: RefreshCw,
-              title: 'Atualização diária',
-              text: 'Os números refletem o sistema de gestão do programa, atualizados a cada dia.',
-            },
-            {
-              icon: Eye,
-              title: 'Somente leitura',
-              text: 'Esta página apenas consulta os dados. Nada é alterado a partir daqui.',
-            },
-            {
-              icon: CheckCircle2,
-              title: 'Sem dados pessoais',
-              text: 'Produtores e propriedades aparecem sempre somados, nunca identificados.',
-            },
-          ].map(({ icon: Icon, title, text }) => (
-            <motion.div key={title} variants={riseIn} className="flex gap-3.5">
-              <span className="mt-0.5 inline-flex shrink-0 text-accent">
-                <Icon size={19} />
-              </span>
-              <div>
-                <div className="text-[13.5px] font-semibold">{title}</div>
-                <p className="mt-1 text-[12.5px] leading-relaxed text-ink-soft">{text}</p>
-              </div>
-            </motion.div>
-          ))}
+          <span className="mt-0.5 inline-flex shrink-0 text-accent">
+            <CheckCircle2 size={19} />
+          </span>
+          <div>
+            <div className="text-[13.5px] font-semibold">Sem dados pessoais</div>
+            <p className="mt-1 text-[12.5px] leading-relaxed text-ink-soft">
+              Produtores e propriedades aparecem sempre somados, nunca identificados.
+            </p>
+          </div>
         </motion.div>
       </section>
 
@@ -523,7 +431,7 @@ export default function PublicResultsPage() {
         </section>
       )}
 
-      <PublicFooter onLogin={openLogin} />
+      <PublicFooter />
     </div>
   );
 }

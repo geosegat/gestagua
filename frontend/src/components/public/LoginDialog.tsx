@@ -177,10 +177,6 @@ export default function LoginDialog({ open, onClose }: { open: boolean; onClose:
             {loading ? 'Validando…' : 'Entrar'}
           </button>
         </form>
-
-        <p className="mt-6 border-t border-line pt-4 text-center text-[11.5px] text-ink-soft">
-          Consulta somente leitura · os resultados públicos não exigem chave
-        </p>
       </div>
     </div>
   );

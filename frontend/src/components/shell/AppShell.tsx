@@ -30,9 +30,6 @@ export default function AppShell() {
         <div className="px-4 pb-10 pt-6 sm:px-7 sm:pt-8">
           <Outlet />
         </div>
-        <footer className="pb-8 text-center text-[12px] text-ink-soft">
-          Consulta somente leitura · dados atualizados diariamente
-        </footer>
       </main>
     </div>
   );

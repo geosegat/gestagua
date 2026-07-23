@@ -48,17 +48,11 @@ export default function ProjectInternalHeader({
         />
         <div className="relative">
           <div className="mb-4 flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-on-brand/10 px-3 py-1 text-[10.5px] font-semibold uppercase tracking-[0.15em] text-on-brand/80">
-              Somente leitura
-            </span>
             <StatusBadge status={project.status} />
           </div>
 
           <div className="max-w-3xl">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-on-brand/55">
-              Projeto · dados sincronizados diariamente
-            </p>
-            <h1 className="mt-2 font-display text-[27px] font-semibold leading-tight sm:text-[36px]">
+            <h1 className="font-display text-[27px] font-semibold leading-tight sm:text-[36px]">
               {project.property.name || 'Projeto sem nome de propriedade'}
             </h1>
             <p className="mt-2 text-[13px] text-on-brand/70 sm:text-sm">

@@ -24,3 +24,14 @@ export const RECURSO_TOTAL_REAIS = 155000;
 export function projectedCo2(plannedAreaHa: number): number {
   return Math.round(plannedAreaHa * CO2_TCO2E_PER_HA);
 }
+
+/** Repasses por projeto no PSA (dois repasses de 50%, conforme o Decreto). */
+export const REPASSES_POR_PROJETO = 2;
+
+/**
+ * Parcelas executadas (repasses já feitos) exibidas no portal. Fixo em 0 por
+ * ora: nenhum repasse saiu ainda; vira ~20 (um por projeto) quando o primeiro
+ * repasse for pago. Atualizar aqui, ou ligar no dado real, quando o
+ * monitoramento passar a registrar os pagamentos.
+ */
+export const PARCELAS_EXECUTADAS = 0;

@@ -121,9 +121,6 @@ export default function ProjectsPage() {
     <>
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-brand/60">
-            Consulta somente leitura · atualização diária
-          </div>
           <h1 className="font-display text-[34px] font-semibold leading-tight text-brand-deep">
             Projetos
           </h1>

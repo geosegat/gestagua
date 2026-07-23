@@ -5,11 +5,9 @@ import {
   CheckCircle2,
   ChevronRight,
   Droplets,
-  Eye,
   FolderKanban,
   LandPlot,
   PackageOpen,
-  RefreshCw,
   Sprout,
   TreePine,
   Trees,
@@ -144,11 +142,6 @@ export default function LandingPage({ autoOpenLogin = false }: { autoOpenLogin?:
     if (autoOpenLogin && getKey()) navigate('/visao-geral', { replace: true });
   }, [autoOpenLogin, navigate]);
 
-  function openLogin() {
-    if (getKey()) navigate('/visao-geral');
-    else setLoginOpen(true);
-  }
-
   return (
     <div className="brand-scroll h-full overflow-y-auto">
       <PublicHeader
@@ -201,9 +194,6 @@ export default function LandingPage({ autoOpenLogin = false }: { autoOpenLogin?:
             <a href="#resultados" className={CTA_QUIET}>
               Ver os números principais
             </a>
-          </motion.div>
-          <motion.div variants={riseIn} className="mt-6 text-[12px] text-ink-soft">
-            Dados atualizados diariamente · somente leitura
           </motion.div>
         </motion.div>
       </section>
@@ -350,46 +340,28 @@ export default function LandingPage({ autoOpenLogin = false }: { autoOpenLogin?:
         </motion.div>
       </section>
 
-      {/* compromissos de transparência */}
+      {/* compromisso de transparência */}
       <section className={`${PUBLIC_CONTAINER} mt-16`}>
         <motion.div
-          variants={stagger}
+          variants={riseIn}
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, margin: '-40px' }}
-          className="grid gap-6 border-y border-line py-8 sm:grid-cols-3"
+          className="flex justify-center gap-3.5 border-y border-line py-8"
         >
-          {[
-            {
-              icon: RefreshCw,
-              title: 'Atualização diária',
-              text: 'Os números refletem o sistema de gestão do programa, atualizados a cada dia.',
-            },
-            {
-              icon: Eye,
-              title: 'Somente leitura',
-              text: 'O painel apenas consulta os dados. Nada é alterado a partir daqui.',
-            },
-            {
-              icon: CheckCircle2,
-              title: 'Sem dados pessoais',
-              text: 'Produtores e propriedades aparecem sempre somados, nunca identificados.',
-            },
-          ].map(({ icon: Icon, title, text }) => (
-            <motion.div key={title} variants={riseIn} className="flex gap-3.5">
-              <span className="mt-0.5 inline-flex shrink-0 text-accent">
-                <Icon size={19} />
-              </span>
-              <div>
-                <div className="text-[13.5px] font-semibold">{title}</div>
-                <p className="mt-1 text-[12.5px] leading-relaxed text-ink-soft">{text}</p>
-              </div>
-            </motion.div>
-          ))}
+          <span className="mt-0.5 inline-flex shrink-0 text-accent">
+            <CheckCircle2 size={19} />
+          </span>
+          <div>
+            <div className="text-[13.5px] font-semibold">Sem dados pessoais</div>
+            <p className="mt-1 text-[12.5px] leading-relaxed text-ink-soft">
+              Produtores e propriedades aparecem sempre somados, nunca identificados.
+            </p>
+          </div>
         </motion.div>
       </section>
 
-      <PublicFooter onLogin={openLogin} />
+      <PublicFooter />
     </div>
   );
 }

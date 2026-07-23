@@ -106,17 +106,22 @@ export default function CarMap({ layers, selectedId, focusTrigger, onLayerClick 
     };
   }, [ready, layers]);
 
-  // realça o selecionado
+  // realça o selecionado. `ready` e `layers` nas deps porque os polígonos só
+  // existem depois do mapa carregar e desenhar - sem isso, selecionar antes do
+  // mapa ficar pronto não pinta nada e nunca reaplica.
   useEffect(() => {
+    if (!ready) return;
     polysRef.current.forEach((polys, id) => {
       const style = id === selectedId ? HIGHLIGHT_STYLE : BASE_STYLE;
       polys.forEach((p) => p.setOptions(style));
     });
-  }, [selectedId, layers]);
+  }, [selectedId, layers, ready]);
 
-  // centraliza no selecionado
+  // centraliza no selecionado. mesmas deps do realce: precisa re-rodar quando o
+  // mapa fica pronto e os polígonos são desenhados, senão o zoom vindo de
+  // /mapa?car=... (seleção antes do mapa carregar) nunca acontece.
   useEffect(() => {
-    if (!mapRef.current || !selectedId) return;
+    if (!ready || !mapRef.current || !selectedId) return;
     const polys = polysRef.current.get(selectedId);
     if (!polys || polys.length === 0) return;
     const bounds = new google.maps.LatLngBounds();
@@ -129,7 +134,7 @@ export default function CarMap({ layers, selectedId, focusTrigger, onLayerClick 
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedId, focusTrigger]);
+  }, [selectedId, focusTrigger, layers, ready]);
 
   if (!import.meta.env.VITE_GOOGLE_MAPS_API_KEY) {
     return (

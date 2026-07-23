@@ -181,8 +181,11 @@ export default function DataTableCard<T>({
             ))}
           </ul>
 
-          {/* sm e acima: tabela tradicional */}
-          <div className={`hidden sm:block${fixed ? '' : ' overflow-x-auto'}`}>
+          {/* sm e acima: tabela tradicional. As classes vão num array pra o
+              `sm:block` nunca ficar colado numa interpolação `${...}` - quando
+              cola, o Tailwind lê `sm:block${...` como um token só e não gera a
+              classe, e a tabela some no desktop. */}
+          <div className={['hidden sm:block', fixed ? '' : 'overflow-x-auto'].join(' ')}>
             <table className={`w-full border-collapse${fixed ? ' table-fixed' : ''}`}>
               {fixed && (
                 <colgroup>
