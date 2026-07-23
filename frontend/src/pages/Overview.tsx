@@ -9,6 +9,7 @@ import ApiErrorBanner from '../components/ApiErrorBanner';
 import Card, { CARD } from '../components/Card';
 import OverviewIndicators from '../components/OverviewIndicators';
 import { StatCard } from '../components/StatCard';
+import SyncControl from '../components/SyncControl';
 import YearFilter from '../components/YearFilter';
 import { getApiErrorMessage } from '../lib/apiError';
 import { formatNumber } from '../lib/format';
@@ -154,6 +155,7 @@ export default function OverviewPage() {
           </p>
         </div>
         <div className="flex flex-wrap items-end gap-4">
+          <SyncControl />
           <YearFilter
             years={
               data?.filters?.availableYears ??

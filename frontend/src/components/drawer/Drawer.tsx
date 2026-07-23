@@ -53,7 +53,9 @@ function DrawerBody({
                 {branding.productName}
               </div>
               {branding.productSubtitle && (
-                <div className="truncate text-[11px] text-on-brand/60">
+                // duas linhas em vez de truncar: o subtítulo da marca é uma
+                // frase inteira e cortaria no meio de uma palavra
+                <div className="line-clamp-2 text-[10.5px] leading-[1.25] text-on-brand/60">
                   {branding.productSubtitle}
                 </div>
               )}

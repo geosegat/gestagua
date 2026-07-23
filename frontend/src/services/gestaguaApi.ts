@@ -20,6 +20,7 @@ import type {
   ProjectStagesResponse,
   PropertiesResponse,
   PublicPortalResponse,
+  SyncState,
   PageParams,
   ProjectPageParams,
   YearParams,
@@ -64,6 +65,7 @@ export const gestaguaApi = createApi({
     'Properties',
     'Mobilizations',
     'Programs',
+    'Sync',
   ],
   endpoints: (builder) => ({
     validateKey: builder.mutation<void, string>({
@@ -152,6 +154,18 @@ export const gestaguaApi = createApi({
       }),
       providesTags: ['Mobilizations'],
     }),
+    getSyncState: builder.query<SyncState, void>({
+      query: () => '/admin/sync',
+      providesTags: ['Sync'],
+    }),
+    requestSync: builder.mutation<SyncState, void>({
+      query: () => ({
+        url: '/admin/sync',
+        method: 'POST',
+        body: { event: 'request' },
+      }),
+      invalidatesTags: ['Sync'],
+    }),
     getPrograms: builder.query<ProgramsResponse, PageParams>({
       query: ({ page, limit, search }) => ({
         url: '/programs',
@@ -177,4 +191,6 @@ export const {
   useGetPropertiesQuery,
   useGetMobilizationsQuery,
   useGetProgramsQuery,
+  useGetSyncStateQuery,
+  useRequestSyncMutation,
 } = gestaguaApi;

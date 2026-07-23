@@ -74,6 +74,9 @@ Resposta de lista sempre no mesmo formato:
 | `GET /propriedades` | ✅     | lista paginada                                |
 | `GET /mobilizacoes` | ✅     | lista paginada (`page`, `limit`, `busca`)     |
 | `GET /programs`     | ✅     | programas disponíveis no espelho              |
+| `GET /publico/portal` | ✅   | portal público: só agregados, **sem chave**   |
+| `GET /admin/sync`   | ✅     | situação da sincronização VPS → Railway       |
+| `POST /admin/sync`  | ✅     | eventos `request` (painel) / `start`, `finish` (agente) |
 
 ### Ano de referência
 
@@ -93,6 +96,42 @@ também devolve `filters.availableYears`.
 - pagamentos comparam `installments.isExecuted` e `installments.paidAt`;
 - carbono devolve o catálogo e sua cobertura, mas mantém
   `totalStoredCarbon: null` até a definição da regra de cálculo e unidade.
+
+## Sincronização VPS → Railway (botão "Atualizar dados")
+
+A API **não** executa dump nem restore: ela só guarda a intenção. Quem faz o
+trabalho é `scripts/sync-agent.ps1`, rodando **na VPS**, que consulta o estado
+e assume quando há pedido. O desenho é esse porque a VPS é quem tem o banco de
+origem e o `pg_dump`, e assim ela só faz chamadas de saída, sem abrir nenhuma
+porta pra internet.
+
+O fluxo é: o painel manda `request` → o agente vê `pending`, manda `start`,
+roda `pg_dump` do clone do dia e `pg_restore` no Postgres da Railway → manda
+`finish`. Execução parada há mais de 30 min é considerada perdida, pra um
+script morto não travar o botão pra sempre.
+
+O estado mora em **arquivo** (`SYNC_STATE_FILE`), nunca em tabela: o banco que
+a API lê é o espelho, e a sincronização sobrescreve justamente esse banco.
+
+### Instalar o agente na VPS
+
+1. Defina as variáveis na conta que vai rodar a tarefa:
+   - `GESTAGUA_API_URL` - URL pública da API
+   - `GESTAGUA_API_KEY` - a mesma chave do `x-api-key`
+   - `GESTAGUA_TARGET_URL` - connection string **pública** do Postgres da
+     Railway (a privada só resolve dentro da Railway)
+   - `GESTAGUA_DB_PASSWORD` - senha do Postgres local da VPS
+2. Teste sem tocar em nada: `.\sync-agent.ps1 -Force -WhatIf`
+3. Agende duas tarefas no Agendador do Windows:
+   - a cada 5 min: `.\sync-agent.ps1` (atende o botão; sai na hora se não há
+     pedido pendente)
+   - 1x por dia: `.\sync-agent.ps1 -Force` (é o que torna verdadeira a frase
+     "atualização diária" que aparece na interface)
+
+Durante o restore o banco de destino fica alguns segundos inconsistente, e
+nessa janela o painel e o portal público podem responder erro. Com o volume
+atual isso é rápido; se incomodar, o caminho é restaurar num schema novo e
+renomear no final.
 
 ## ⚠️ Dados pessoais (LGPD) - leia antes de expor coisa nova
 

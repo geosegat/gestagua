@@ -9,6 +9,7 @@ node_modules/
 
 # Arquivos locais
 banco_ativo.txt
+sync-state.json
 *.log
 
 # Builds

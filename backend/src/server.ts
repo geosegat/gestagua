@@ -23,10 +23,13 @@ app.use(
 
       return callback(new Error('origem nao permitida pelo CORS'));
     },
-    methods: ['GET', 'OPTIONS'],
+    // POST existe só pra sincronização (POST /admin/sync); os dados seguem
+    // sendo somente leitura
+    methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'x-api-key'],
   }),
 );
+app.use(express.json({ limit: '8kb' }));
 app.use(express.static(publicDir));
 app.use(routes);
 

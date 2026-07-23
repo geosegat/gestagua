@@ -13,8 +13,13 @@ export interface NavOverride {
 }
 
 export interface BrandingConfig {
-  /** v2 introduziu o logo do programa como padrão (antes o padrão era "sem logo"). */
-  version: 2;
+  /**
+   * v2 introduziu o logo do programa como padrão (antes o padrão era "sem
+   * logo"); v3 trocou o subtítulo pela redação oficial do programa; v4
+   * reverteu o nome pra Gestágua (uma v3 intermediária chegou a gravar "PSA
+   * Alegre/ES" em alguns navegadores, e o bump força a correção).
+   */
+  version: 4;
   productName: string;
   productSubtitle: string;
   /** Data-URL ou URL de imagem; null usa o ícone padrão. */

@@ -10,3 +10,4 @@ export * from './projects';
 export * from './publicPortal';
 export * from './properties';
 export * from './stages';
+export * from './sync';

@@ -51,6 +51,7 @@ export interface AppConfig {
   gestaguaProgramId: string;
   pointerFile: string;
   logFile: string;
+  syncStateFile: string;
   db: DatabaseConfig;
 }
 

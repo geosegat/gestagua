@@ -12,6 +12,7 @@ import * as programs from '../controllers/programsController';
 import * as projetos from '../controllers/projectsController';
 import * as produtores from '../controllers/producersController';
 import * as propriedades from '../controllers/propertiesController';
+import * as sync from '../controllers/syncController';
 import { asyncHandler } from '../middlewares/asyncHandler';
 import auth from '../middlewares/auth';
 
@@ -29,6 +30,9 @@ router.get('/dashboard', asyncHandler(dashboard.summary));
 router.get('/publico/portal', asyncHandler(portalPublico.portal));
 
 router.use(auth);
+// sincronização: o painel pede, o agente da VPS reporta (ver syncController)
+router.get('/admin/sync', sync.status);
+router.post('/admin/sync', sync.event);
 router.get('/indicadores', asyncHandler(indicadores.summary));
 router.get('/projetos', asyncHandler(projetos.listar));
 router.get('/projetos/:id/modalidades', asyncHandler(modalidadesProjeto.listar));

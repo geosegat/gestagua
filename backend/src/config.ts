@@ -47,6 +47,7 @@ const config: AppConfig = {
   gestaguaProgramId: 'e0c5918f-32a5-44bd-917d-ad43fd3111b0',
   pointerFile: envPath('POINTER_FILE', 'banco_ativo.txt'),
   logFile: envPath('LOG_FILE', 'api.log'),
+  syncStateFile: envPath('SYNC_STATE_FILE', 'sync-state.json'),
   db: {
     connectionString: envStr('DATABASE_URL', ''),
     host: envStr('DB_HOST', 'localhost'),

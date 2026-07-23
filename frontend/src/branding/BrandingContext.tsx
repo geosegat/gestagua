@@ -13,7 +13,7 @@ import { DEFAULT_BRANDING } from './presets';
 import type { BrandingConfig } from '../types';
 
 const STORAGE_KEY = 'gestagua_branding_v1';
-const VERSION = 2;
+const VERSION = 4;
 
 interface BrandingContextValue {
   branding: BrandingConfig;
@@ -41,18 +41,24 @@ function load(): BrandingConfig {
 /** Garante shape válido mesmo com JSON antigo/alheio (import ou storage). */
 function sanitize(raw: Partial<BrandingConfig>): BrandingConfig {
   const colors = raw.colors ?? DEFAULT_BRANDING.colors;
-  // Tema gravado antes da v2 não conhecia o logo do programa: ali "sem logo"
-  // era o padrão de fábrica, não uma escolha do admin. Adota o logo novo sem
-  // descartar cores e menu que já estivessem customizados.
+  // Tema gravado antes desta versão carrega valores que eram o padrão de
+  // fábrica antigo, não escolha do admin: v2 mudou o logo e v3 trocou o
+  // subtítulo pela redação oficial do programa. Nesses casos adota os novos
+  // padrões, preservando cores e menu já customizados.
+  //
+  // A contrapartida é que nome e subtítulo digitados à mão antes da v3 se
+  // perdem nesta atualização. Vale porque o produto ainda não foi entregue e o
+  // texto antigo brigava com a marca na tela; de v3 em diante, o que o admin
+  // escrever é preservado.
   const legacy = raw.version !== VERSION;
   return {
     version: VERSION,
     productName:
-      typeof raw.productName === 'string' && raw.productName.trim()
+      !legacy && typeof raw.productName === 'string' && raw.productName.trim()
         ? raw.productName
         : DEFAULT_BRANDING.productName,
     productSubtitle:
-      typeof raw.productSubtitle === 'string'
+      !legacy && typeof raw.productSubtitle === 'string'
         ? raw.productSubtitle
         : DEFAULT_BRANDING.productSubtitle,
     logoUrl:
