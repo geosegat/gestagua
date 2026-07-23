@@ -3,7 +3,7 @@ import path from 'node:path';
 
 import config from '../config';
 import { log } from '../log';
-import type { SyncLastRun, SyncState, SyncTrigger } from '../types';
+import type { SyncLastRun, SyncLogLine, SyncState, SyncTrigger } from '../types';
 
 /**
  * Estado da sincronização VPS -> Railway.
@@ -23,7 +23,11 @@ const IDLE: SyncState = {
   startedAt: null,
   trigger: null,
   lastRun: null,
+  logs: [],
 };
+
+/** Teto de linhas de progresso guardadas, pra o arquivo não crescer sem fim. */
+const MAX_LOGS = 80;
 
 /**
  * Execução parada há mais que isso é considerada perdida (VPS reiniciou, script
@@ -46,7 +50,9 @@ function read(): SyncState {
   try {
     const raw = fs.readFileSync(config.syncStateFile, 'utf8');
     const parsed: unknown = JSON.parse(raw);
-    return isSyncState(parsed) ? parsed : IDLE;
+    if (!isSyncState(parsed)) return IDLE;
+    // estado gravado antes dos logs existirem não tem o campo
+    return { ...parsed, logs: Array.isArray(parsed.logs) ? parsed.logs : [] };
   } catch {
     // arquivo ainda não existe (primeira execução) ou está corrompido
     return IDLE;
@@ -80,6 +86,7 @@ function settled(state: SyncState): SyncState {
       durationMs: null,
       trigger: state.trigger ?? 'manual',
     },
+    logs: state.logs, // preserva o progresso do run travado, pra investigar
   };
 }
 
@@ -110,8 +117,8 @@ export function request(): SyncState {
 }
 
 /**
- * O agente da VPS assumiu o trabalho. Aceita começar sem pedido pendente
- * porque o mesmo agente roda no agendador diário.
+ * O worker da VPS assumiu o trabalho. Aceita começar sem pedido pendente
+ * porque o mesmo worker roda no agendador diário. Zera o log: começa um run.
  */
 export function start(trigger: SyncTrigger): SyncState {
   const state = current();
@@ -122,12 +129,27 @@ export function start(trigger: SyncTrigger): SyncState {
     status: 'running',
     startedAt: new Date().toISOString(),
     trigger: state.status === 'pending' ? (state.trigger ?? trigger) : trigger,
+    logs: [{ at: new Date().toISOString(), message: 'Iniciando atualização…' }],
   };
   write(next);
   return next;
 }
 
-/** O agente terminou. Guarda o resultado e libera pra um novo pedido. */
+/** Uma linha de progresso do worker. Ignorada se não há run em andamento. */
+export function appendLog(message: string): SyncState {
+  const state = current();
+  if (state.status !== 'running') return state;
+
+  const line: SyncLogLine = { at: new Date().toISOString(), message };
+  const next: SyncState = {
+    ...state,
+    logs: [...state.logs, line].slice(-MAX_LOGS),
+  };
+  write(next);
+  return next;
+}
+
+/** O worker terminou. Guarda o resultado e o log, e libera pra um novo pedido. */
 export function finish(ok: boolean, error: string | null): SyncState {
   const state = current();
   const startedAt = state.startedAt ? Date.parse(state.startedAt) : null;
@@ -135,12 +157,18 @@ export function finish(ok: boolean, error: string | null): SyncState {
   const lastRun: SyncLastRun = {
     finishedAt: new Date().toISOString(),
     ok,
-    error: ok ? null : (error ?? 'falha não detalhada pelo agente'),
+    error: ok ? null : (error ?? 'falha não detalhada pelo worker'),
     durationMs: startedAt ? Date.now() - startedAt : null,
     trigger: state.trigger ?? 'manual',
   };
 
-  const next: SyncState = { ...IDLE, lastRun };
+  const closing: SyncLogLine = {
+    at: lastRun.finishedAt,
+    message: ok ? 'Concluído com sucesso.' : `Falhou: ${lastRun.error}`,
+  };
+
+  // volta pra idle mas mantém o log do run que acabou, pra leitura no painel
+  const next: SyncState = { ...IDLE, lastRun, logs: [...state.logs, closing].slice(-MAX_LOGS) };
   write(next);
   log(`Sincronizacao finalizada: ${ok ? 'sucesso' : `falha (${lastRun.error})`}`);
   return next;

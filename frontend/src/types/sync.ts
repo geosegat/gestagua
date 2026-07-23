@@ -11,10 +11,16 @@ export interface SyncLastRun {
   trigger: SyncTrigger;
 }
 
+export interface SyncLogLine {
+  at: string;
+  message: string;
+}
+
 export interface SyncState {
   status: SyncStatus;
   requestedAt: string | null;
   startedAt: string | null;
   trigger: SyncTrigger | null;
   lastRun: SyncLastRun | null;
+  logs: SyncLogLine[];
 }

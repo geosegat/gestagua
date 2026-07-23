@@ -12,22 +12,32 @@ export interface SyncLastRun {
   trigger: SyncTrigger;
 }
 
+/** Uma linha de progresso reportada pelo worker enquanto a atualização roda. */
+export interface SyncLogLine {
+  at: string;
+  message: string;
+}
+
 export interface SyncState {
   status: SyncStatus;
   /** Quando o botão foi clicado e ainda não foi atendido. */
   requestedAt: string | null;
-  /** Quando o agente da VPS assumiu o trabalho. */
+  /** Quando o worker da VPS assumiu o trabalho. */
   startedAt: string | null;
   trigger: SyncTrigger | null;
   lastRun: SyncLastRun | null;
+  /** Progresso do run atual (ou do último), pra mostrar ao vivo no painel. */
+  logs: SyncLogLine[];
 }
 
-/** Eventos aceitos no POST: o painel manda `request`, o agente manda os outros. */
-export type SyncEvent = 'request' | 'start' | 'finish';
+/** Eventos aceitos no POST: o painel manda `request`, o worker manda os outros. */
+export type SyncEvent = 'request' | 'start' | 'log' | 'finish';
 
 export interface SyncEventBody {
   event?: SyncEvent;
   trigger?: SyncTrigger;
   ok?: boolean;
   error?: string;
+  /** Texto da linha de progresso quando event === 'log'. */
+  message?: string;
 }

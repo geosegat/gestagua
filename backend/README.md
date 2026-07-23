@@ -97,41 +97,50 @@ também devolve `filters.availableYears`.
 - carbono devolve o catálogo e sua cobertura, mas mantém
   `totalStoredCarbon: null` até a definição da regra de cálculo e unidade.
 
-## Sincronização VPS → Railway (botão "Atualizar dados")
+## Sincronização Azure → Railway (botão "Atualizar dados")
 
-A API **não** executa dump nem restore: ela só guarda a intenção. Quem faz o
-trabalho é `scripts/sync-agent.ps1`, rodando **na VPS**, que consulta o estado
-e assume quando há pedido. O desenho é esse porque a VPS é quem tem o banco de
-origem e o `pg_dump`, e assim ela só faz chamadas de saída, sem abrir nenhuma
-porta pra internet.
+A API **não** executa dump nem restore: ela só guarda a intenção e o progresso.
+Quem faz o trabalho é `scripts/sync-worker.ps1`, rodando **na VPS**, que baixa
+os dados do Azure e publica direto na Railway — dois passos, sem passar pelo
+banco local da VPS:
 
-O fluxo é: o painel manda `request` → o agente vê `pending`, manda `start`,
-roda `pg_dump` do clone do dia e `pg_restore` no Postgres da Railway → manda
-`finish`. Execução parada há mais de 30 min é considerada perdida, pra um
-script morto não travar o botão pra sempre.
+```
+Azure (mvgi_stage) --pg_dump--> arquivo --pg_restore--> Railway --> API
+```
 
-O estado mora em **arquivo** (`SYNC_STATE_FILE`), nunca em tabela: o banco que
-a API lê é o espelho, e a sincronização sobrescreve justamente esse banco.
+A VPS só faz chamadas de **saída** (Azure, Railway e a própria API), então não
+precisa abrir porta nenhuma. O banco local da VPS (`clone-banco.ps1`,
+`banco_ativo.txt`) continua existindo pros ambientes de dev, mas **não** entra
+no caminho do botão.
 
-### Instalar o agente na VPS
+O fluxo: o painel manda `request` → o worker vê `pending`, manda `start`, e a
+cada etapa manda um `log` (que o painel mostra ao vivo) → no fim manda `finish`.
+Execução parada há mais de 30 min é considerada perdida, pra um script morto
+não travar o botão pra sempre.
 
-1. Defina as variáveis na conta que vai rodar a tarefa:
-   - `GESTAGUA_API_URL` - URL pública da API
+O estado e o progresso moram em **arquivo** (`SYNC_STATE_FILE`), nunca em
+tabela: a Railway é justamente o que a atualização sobrescreve.
+
+### Instalar o worker na VPS
+
+1. Defina as variáveis (uma vez, `setx /M` como Administrador):
+   - `GESTAGUA_API_URL` - URL pública da API (com `https://`)
    - `GESTAGUA_API_KEY` - a mesma chave do `x-api-key`
+   - `GESTAGUA_AZURE_URL` - connection string do Postgres do **Azure** (origem)
    - `GESTAGUA_TARGET_URL` - connection string **pública** do Postgres da
-     Railway (a privada só resolve dentro da Railway)
-   - `GESTAGUA_DB_PASSWORD` - senha do Postgres local da VPS
-2. Teste sem tocar em nada: `.\sync-agent.ps1 -Force -WhatIf`
-3. Agende duas tarefas no Agendador do Windows:
-   - a cada 5 min: `.\sync-agent.ps1` (atende o botão; sai na hora se não há
+     **Railway** (a privada só resolve dentro da Railway)
+2. Feche e reabra o PowerShell, e teste sem tocar em nada:
+   `.\sync-worker.ps1 -Force -WhatIf`
+3. Teste real uma vez: `.\sync-worker.ps1 -Force`
+4. Agende duas tarefas no Agendador do Windows:
+   - a cada 5 min: `.\sync-worker.ps1` (atende o botão; sai na hora se não há
      pedido pendente)
-   - 1x por dia: `.\sync-agent.ps1 -Force` (é o que torna verdadeira a frase
-     "atualização diária" que aparece na interface)
+   - 1x por dia: `.\sync-worker.ps1 -Force` (a atualização automática diária)
 
-Durante o restore o banco de destino fica alguns segundos inconsistente, e
-nessa janela o painel e o portal público podem responder erro. Com o volume
-atual isso é rápido; se incomodar, o caminho é restaurar num schema novo e
-renomear no final.
+Durante o `pg_restore` a Railway fica alguns segundos inconsistente, e nessa
+janela o painel e o portal público podem responder erro. Com o volume atual
+isso é rápido; se incomodar, o caminho é restaurar num schema novo e renomear
+no final.
 
 ## ⚠️ Dados pessoais (LGPD) - leia antes de expor coisa nova
 

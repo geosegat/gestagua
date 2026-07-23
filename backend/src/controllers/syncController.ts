@@ -4,13 +4,14 @@ import * as syncState from '../services/syncState';
 import type { SyncEventBody } from '../types';
 
 /**
- * Sincronização VPS -> Railway.
+ * Sincronização Azure -> Railway.
  *
- * A API não executa o dump nem o restore: ela só guarda a intenção. Quem faz o
- * trabalho é o agente que roda na VPS (scripts/sync-agent.ps1), que consulta
- * este estado de tempos em tempos. O desenho é esse porque a VPS é quem tem o
- * banco de origem e o pg_dump, e assim ela só faz chamadas de saída, sem
- * precisar abrir porta nenhuma pra internet.
+ * A API não executa o dump nem o restore: ela só guarda a intenção e o
+ * progresso. Quem faz o trabalho é o worker que roda na VPS
+ * (scripts/sync-worker.ps1), que consulta este estado, baixa os dados do Azure
+ * e publica na Railway, reportando cada etapa como um `log`. O desenho é esse
+ * porque a VPS tem o pg_dump e o acesso ao Azure, e assim ela só faz chamadas
+ * de saída, sem precisar abrir porta nenhuma pra internet.
  */
 
 /** GET /admin/sync - situação atual, consumida pelo painel e pelo agente. */
@@ -20,7 +21,7 @@ export function status(_req: Request, res: Response): Response {
 
 /**
  * POST /admin/sync - avança a máquina de estados.
- * `request` vem do botão do painel; `start` e `finish` vêm do agente.
+ * `request` vem do botão do painel; `start`, `log` e `finish` vêm do worker.
  */
 export function event(
   req: Request<object, object, SyncEventBody>,
@@ -40,6 +41,12 @@ export function event(
     case 'start':
       return res.status(202).json(syncState.start(trigger));
 
+    case 'log': {
+      const message = typeof body.message === 'string' ? body.message.trim() : '';
+      if (!message) return res.status(400).json({ erro: 'log sem message' });
+      return res.json(syncState.appendLog(message.slice(0, 300)));
+    }
+
     case 'finish':
       return res.json(
         syncState.finish(body.ok === true, typeof body.error === 'string' ? body.error : null),
@@ -47,7 +54,7 @@ export function event(
 
     default:
       return res.status(400).json({
-        erro: 'event invalido. Use request, start ou finish',
+        erro: 'event invalido. Use request, start, log ou finish',
       });
   }
 }
