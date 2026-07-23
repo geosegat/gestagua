@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react';
+import { lazy, Suspense, type ReactElement } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { BrandingProvider } from './branding/BrandingContext';
 import PageContainer from './components/PageContainer';
@@ -17,6 +17,8 @@ import ProjectInformationPage from './pages/ProjectInformationPage';
 import ProjectInstallmentsPage from './pages/ProjectInstallmentsPage';
 import ProjectStagesPage from './pages/ProjectStagesPage';
 import PropertiesPage from './pages/PropertiesPage';
+// mapa carregado sob demanda: puxa o Google Maps só quem abre a tela
+const PropertyMapPage = lazy(() => import('./pages/PropertyMapPage'));
 import PublicResultsPage from './pages/PublicResultsPage';
 import OverviewPage from './pages/Overview';
 import type { NavItem } from './types';
@@ -38,6 +40,7 @@ const FULL_WIDTH = new Set<string>([
   'projetos',
   'mobilizacao',
   'program',
+  'mapa',
 ]);
 
 /** Resolve a página de cada item do menu; sem página real → placeholder. */
@@ -53,6 +56,12 @@ function elementFor(item: NavItem) {
       return <PropertiesPage />;
     case 'mobilizacao':
       return <MobilizationsPage />;
+    case 'mapa':
+      return (
+        <Suspense fallback={<div className="h-[60vh] animate-pulse rounded-[6px] bg-line/30" />}>
+          <PropertyMapPage />
+        </Suspense>
+      );
     case 'personalizacao':
       return <PersonalizationPage />;
     case 'program':

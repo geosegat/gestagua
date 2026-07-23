@@ -4,9 +4,9 @@ import { formatNumber } from '../lib/format';
 import type { PaginatedList } from '../types';
 
 // MODELO do ARVO (medidas), CORES do GestAgua nos ACENTOS (título/números).
-// th: padding 6px 24px · td: padding-x 24px + altura fixa 80px · fonte 14px.
-const TH = 'px-6 py-1.5 text-left text-[14px] font-medium text-[#4b5563]';
-const TD = 'h-20 px-6 align-middle text-[14px]';
+// th: padding 6px 16px · td: padding-x 16px + altura fixa 72px · fonte 14px.
+const TH = 'px-4 py-1.5 text-left text-[14px] font-medium text-[#4b5563]';
+const TD = 'h-[72px] px-4 align-middle text-[14px] overflow-hidden';
 
 // Tons NEUTROS da tabela copiados do ARVO (gray100/200) - o tint petrol deixava
 // o cabeçalho "azulado". Marca fica só nos acentos, não nas superfícies.
@@ -17,6 +17,7 @@ const ROW_LINE = 'border-[#f0f2f5]'; // divisórias entre linhas (gray100)
 const HIDE_BELOW = {
   sm: 'hidden sm:table-cell',
   md: 'hidden md:table-cell',
+  lg: 'hidden lg:table-cell',
 } as const;
 
 export interface Column<T> {
@@ -26,6 +27,11 @@ export interface Column<T> {
   tdClassName?: string;
   /** some com a coluna abaixo do breakpoint */
   hideBelow?: keyof typeof HIDE_BELOW;
+  /**
+   * Largura da coluna (%, px…). Quando pelo menos uma coluna tem width, a
+   * tabela usa table-layout: fixed e não cria scroll horizontal.
+   */
+  width?: string;
 }
 
 interface Props<T> {
@@ -64,6 +70,7 @@ export default function DataTableCard<T>({
   onRowClick,
 }: Props<T>) {
   const { items, loading, page, totalPages, total, itemsPerPage } = list;
+  const fixed = columns.some((c) => c.width);
 
   return (
     <div className={`animate-rise overflow-hidden rounded-[8px] border ${BORDER}`}>
@@ -175,8 +182,15 @@ export default function DataTableCard<T>({
           </ul>
 
           {/* sm e acima: tabela tradicional */}
-          <div className="hidden overflow-x-auto sm:block">
-            <table className="w-full border-collapse">
+          <div className={`hidden sm:block${fixed ? '' : ' overflow-x-auto'}`}>
+            <table className={`w-full border-collapse${fixed ? ' table-fixed' : ''}`}>
+              {fixed && (
+                <colgroup>
+                  {columns.map((col) => (
+                    <col key={col.header} style={{ width: col.width }} />
+                  ))}
+                </colgroup>
+              )}
               <thead>
                 <tr>
                   {columns.map((column) => (

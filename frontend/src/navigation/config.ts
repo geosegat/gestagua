@@ -1,6 +1,7 @@
 import {
   Droplets,
   LayoutDashboard,
+  Map,
   MapPin,
   Megaphone,
   Palette,
@@ -22,11 +23,9 @@ export const NAV_SECTIONS: NavSection[] = [
       { id: 'produtores', label: 'Produtores', icon: Users, path: '/produtores' },
       { id: 'propriedades', label: 'Propriedades', icon: MapPin, path: '/propriedades' },
       { id: 'mobilizacao', label: 'Mobilização', icon: Megaphone, path: '/mobilizacoes' },
+      { id: 'mapa', label: 'Mapa', icon: Map, path: '/mapa' },
     ],
   },
-  // A seção "Análise" (Relatórios e Mapa) saiu do menu: as duas telas ainda
-  // não existem, e o produto só lista o que está pronto. Voltam aqui quando
-  // tiverem página de verdade em elementFor (App.tsx).
   {
     id: 'admin',
     title: 'Administração',

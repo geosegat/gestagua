@@ -36,54 +36,62 @@ function TwoLineCell({ top, base }: { top: string; base: string | null }) {
   );
 }
 
+// larguras em % — somam 100%; o table-fixed garante que tudo caiba sem scroll
 const COLUMNS: Column<Project>[] = [
   {
     header: 'Propriedade',
-    tdClassName: 'max-w-[220px] font-medium text-ink',
+    width: '20%',
+    tdClassName: 'font-medium text-ink',
     cell: (project) => (
       <TwoLineCell top={project.property.name || 'Sem nome'} base={project.property.community} />
     ),
   },
-  { header: 'Situação', cell: (project) => <StatusBadge status={project.status} /> },
   {
-    header: 'Nº Contrato',
-    tdClassName: 'whitespace-nowrap font-semibold text-brand',
-    cell: (project) => project.contract || 'Não informado',
+    header: 'Situação',
+    width: '11%',
+    cell: (project) => <StatusBadge status={project.status} />,
   },
   {
-    header: 'Emissão do Contrato',
-    tdClassName: 'whitespace-nowrap text-ink-soft',
-    cell: (project) => formatDate(project.contractIssueDate),
-  },
-  {
-    header: 'Ano de Início',
-    tdClassName: 'whitespace-nowrap text-ink-soft',
-    hideBelow: 'md',
-    cell: startYear,
+    header: 'Contrato',
+    width: '13%',
+    cell: (project) => (
+      <TwoLineCell
+        top={project.contract || 'Não informado'}
+        base={formatDate(project.contractIssueDate)}
+      />
+    ),
   },
   {
     header: 'Etapa',
-    tdClassName: 'max-w-[200px]',
+    width: '18%',
     cell: (project) => (
       <TwoLineCell top={project.macroStage || 'Não informado'} base={project.stage} />
     ),
   },
   {
-    header: 'Bacia Hidrográfica',
-    tdClassName: 'max-w-[180px] truncate text-ink-soft',
-    hideBelow: 'md',
-    cell: (project) => project.watershed || 'Não informado',
+    header: 'Ano',
+    width: '7%',
+    tdClassName: 'text-ink-soft',
+    cell: startYear,
   },
   {
-    header: 'Área Total',
-    tdClassName: 'whitespace-nowrap text-ink-soft',
-    hideBelow: 'md',
+    header: 'Bacia',
+    width: '13%',
+    tdClassName: 'text-ink-soft',
+    cell: (project) => (
+      <TwoLineCell top={project.watershed || 'Não informado'} base={null} />
+    ),
+  },
+  {
+    header: 'Área',
+    width: '10%',
+    tdClassName: 'text-ink-soft',
     cell: (project) => formatArea(project.property.totalAreaHa),
   },
   {
     header: 'Nascentes',
-    tdClassName: 'whitespace-nowrap text-ink-soft',
-    hideBelow: 'md',
+    width: '8%',
+    tdClassName: 'text-ink-soft',
     cell: (project) => formatNumber(project.property.totalSprings),
   },
 ];
