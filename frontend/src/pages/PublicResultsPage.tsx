@@ -7,10 +7,9 @@ import {
   Eye,
   FolderKanban,
   LandPlot,
-  Layers3,
+  Leaf,
   MapPin,
   RefreshCw,
-  TreePine,
   Users,
   WalletCards,
 } from '../icons';
@@ -26,6 +25,7 @@ import { formatCurrency, formatNumber } from '../lib/format';
 import { modalityClassification, modalityPresentation } from '../lib/modalities';
 import { EASE, riseIn, stagger } from '../lib/motion';
 import { useYearFilter } from '../lib/useYearFilter';
+import { RECURSO_TOTAL_REAIS, projectedCo2 } from '../lib/program';
 import { useGetPublicPortalQuery } from '../services/gestaguaApi';
 
 /**
@@ -172,6 +172,9 @@ export default function PublicResultsPage() {
   const summary = data?.summary;
   const finance = data?.finance;
   const restoration = data?.restoration;
+  // mesmos indicadores da Visão Geral: área planejada, recurso total e CO₂
+  const plannedAreaHa = restoration?.plannedAreaHa ?? null;
+  const co2Projected = plannedAreaHa === null ? null : projectedCo2(plannedAreaHa);
   const errorMessage = error ? getApiErrorMessage(error) : null;
 
   const modalityRows: BarRow[] =
@@ -298,24 +301,25 @@ export default function PublicResultsPage() {
           />
           <ResultStat
             icon={LandPlot}
-            value={summary?.totalAreaHa ?? null}
+            value={plannedAreaHa}
             suffix="ha"
-            label="Área acompanhada"
+            label="Área planejada"
             started={heroInView}
             loading={isLoading}
           />
           <ResultStat
-            icon={TreePine}
-            value={summary?.nativeVegetationAreaHa ?? null}
-            suffix="ha"
-            label="Vegetação nativa"
+            icon={WalletCards}
+            value={RECURSO_TOTAL_REAIS}
+            prefix="R$"
+            label="Recurso total"
             started={heroInView}
             loading={isLoading}
           />
           <ResultStat
-            icon={Layers3}
-            value={summary?.totalImplementations ?? null}
-            label="Implantações"
+            icon={Leaf}
+            value={co2Projected}
+            suffix="tCO₂e"
+            label="CO₂ projetado"
             started={heroInView}
             loading={isLoading}
           />

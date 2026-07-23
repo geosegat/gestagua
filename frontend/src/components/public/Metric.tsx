@@ -36,6 +36,7 @@ export function CountUp({ value, started }: { value: number | null; started: boo
 export function ResultStat({
   icon: Icon,
   value,
+  prefix,
   suffix,
   label,
   started,
@@ -43,6 +44,8 @@ export function ResultStat({
 }: {
   icon: RemixiconComponentType;
   value: number | null;
+  /** prefixo antes do número (ex.: "R$"); só aparece quando há valor */
+  prefix?: string;
   suffix?: string;
   label: string;
   started: boolean;
@@ -59,6 +62,9 @@ export function ResultStat({
         <div className="flex items-baseline justify-center gap-2.5">
           <Icon size={21} className="translate-y-[3px] text-accent" />
           <span className="font-display text-[30px] font-semibold leading-none text-brand-deep">
+            {prefix && value !== null && (
+              <span className="mr-1 text-[19px] text-ink-soft">{prefix}</span>
+            )}
             <CountUp value={value} started={started} />
           </span>
           {suffix && value !== null && (

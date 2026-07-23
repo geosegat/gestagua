@@ -1,8 +1,8 @@
 import {
-  Droplets,
+  CircleDollarSign,
   FolderKanban,
   LandPlot,
-  TreePine,
+  Leaf,
 } from '../icons';
 import { motion } from 'framer-motion';
 import ApiErrorBanner from '../components/ApiErrorBanner';
@@ -12,13 +12,14 @@ import { StatCard } from '../components/StatCard';
 import SyncControl from '../components/SyncControl';
 import YearFilter from '../components/YearFilter';
 import { getApiErrorMessage } from '../lib/apiError';
-import { formatNumber } from '../lib/format';
+import { formatCurrency, formatNumber } from '../lib/format';
 import {
   modalityClassification,
   modalityPresentation,
 } from '../lib/modalities';
 import { EASE, riseIn, stagger } from '../lib/motion';
 import { useYearFilter } from '../lib/useYearFilter';
+import { RECURSO_TOTAL_REAIS, projectedCo2 } from '../lib/program';
 import {
   useGetDashboardSummaryQuery,
   useGetIndicatorsQuery,
@@ -60,6 +61,8 @@ interface BarItem {
   label: string;
   classification: string;
   value: number;
+  /** unidade exibida ao lado do número (ex.: "ha"); vazio = número puro */
+  unit?: string;
 }
 
 function Bars({ data }: { data: BarItem[] }) {
@@ -68,7 +71,7 @@ function Bars({ data }: { data: BarItem[] }) {
 
   return (
     <div className="grid gap-3.5 sm:grid-cols-2 sm:gap-x-8">
-      {data.map(({ label, classification, value }, index) => (
+      {data.map(({ label, classification, value, unit }, index) => (
         <div key={`${label}-${classification}`}>
           <div className="mb-1.5 flex items-start justify-between gap-3 text-[13px]">
             <div className="min-w-0">
@@ -79,6 +82,7 @@ function Bars({ data }: { data: BarItem[] }) {
             </div>
             <span className="shrink-0 text-ink-soft">
               {formatNumber(value)}
+              {unit ? ` ${unit}` : ''}
               <span className="ml-1.5 text-[11px] text-ink-soft/70">
                 {Math.round((value / total) * 100)}%
               </span>
@@ -125,15 +129,23 @@ export default function OverviewPage() {
     ? getApiErrorMessage(indicatorsError)
     : null;
   const summary = data?.summary;
+  // área planejada = soma da área das modalidades (o card "área total" antigo
+  // mostrava a área das propriedades, que é outra coisa)
+  const plannedAreaHa = data?.modalities.reduce((sum, m) => sum + m.plannedAreaHa, 0) ?? 0;
+  const co2Projected = projectedCo2(plannedAreaHa);
+  // barras por ÁREA planejada de cada modalidade, da maior pra menor
   const modalityBars: BarItem[] =
-    data?.modalities.map((modality) => {
-      const presentation = modalityPresentation(modality);
-      return {
-        label: presentation.shortTitle,
-        classification: modalityClassification(presentation),
-        value: modality.totalImplementations,
-      };
-    }) ?? [];
+    data?.modalities
+      .map((modality) => {
+        const presentation = modalityPresentation(modality);
+        return {
+          label: presentation.shortTitle,
+          classification: modalityClassification(presentation),
+          value: modality.plannedAreaHa,
+          unit: 'ha',
+        };
+      })
+      .sort((a, b) => b.value - a.value) ?? [];
 
   return (
     <>
@@ -195,31 +207,31 @@ export default function OverviewPage() {
             />
             <StatCard
               icon={LandPlot}
-              value={`${formatNumber(summary.totalAreaHa)} ha`}
-              label="Área total"
+              value={`${formatNumber(plannedAreaHa)} ha`}
+              label="Área planejada"
               tone="accent"
-              hint={`${formatNumber(summary.activeProperties)} propriedades ativas, sem duplicidade`}
+              hint="Soma da área planejada das modalidades nos projetos em execução"
             />
             <StatCard
-              icon={TreePine}
-              value={`${formatNumber(summary.nativeVegetationAreaHa)} ha`}
-              label="Vegetação nativa"
+              icon={CircleDollarSign}
+              value={formatCurrency(RECURSO_TOTAL_REAIS)}
+              label="Recurso total"
+              tone="brand"
+              hint="Recurso total destinado ao programa (valor oficial informado pela prefeitura)"
+            />
+            <StatCard
+              icon={Leaf}
+              value={`${formatNumber(co2Projected)} tCO₂e`}
+              label="CO₂ projetado"
               tone="ok"
-              hint="Vegetação nativa nas propriedades de projetos ativos"
-            />
-            <StatCard
-              icon={Droplets}
-              value={summary.totalSprings}
-              label="Nascentes"
-              tone="accent"
-              hint="Nascentes nas propriedades de projetos ativos"
+              hint="Potencial dos projetos: área planejada × 215,6 tCO₂e/ha (biomassa 125 t/ha × 0,47 carbono × 3,67 CO₂), metodologia do MVGI"
             />
           </motion.div>
 
           <Section
-            title="Modalidades"
-            badge={`${formatNumber(summary.totalImplementations)} implantações`}
-            subtitle="Nomes e grupos conforme o Decreto 14.210/2026; quantidades dos projetos em execução"
+            title="Área por modalidade"
+            badge={`${formatNumber(plannedAreaHa)} ha planejados`}
+            subtitle="Área planejada de cada modalidade conforme o Decreto 14.210/2026, nos projetos em execução"
           >
             <Bars data={modalityBars} />
           </Section>
