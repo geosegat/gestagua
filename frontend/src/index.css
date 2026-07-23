@@ -4,6 +4,9 @@
 @source './components/project/ProjectInternalHeader.tsx';
 @source './pages/ProjectStagesPage.tsx';
 @source './pages/ProjectInstallmentsPage.tsx';
+@source './components/DataTableCard.tsx';
+@source './pages/PropertyMapPage.tsx';
+@source './components/map/CarMap.tsx';
 
 /* ============================================================
    Montserrat self-hosted - MESMOS arquivos do MVGI
