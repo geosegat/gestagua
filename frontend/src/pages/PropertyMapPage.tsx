@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { LandPlot, MapPin, Search } from '../icons';
+import { CheckCircle2, ClipboardCheck, LandPlot, MapPin, Search } from '../icons';
 import ApiErrorBanner from '../components/ApiErrorBanner';
 import { CARD } from '../components/Card';
 import CarMap, { type CarLayer } from '../components/map/CarMap';
@@ -71,7 +71,23 @@ export default function PropertyMapPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [focusTrigger, setFocusTrigger] = useState(0);
   const [search, setSearch] = useState('');
+  const [copied, setCopied] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
+
+  // propriedade em destaque no mapa, pra mostrar o CAR e permitir copiá-lo
+  const selectedProperty = properties.find((p) => p.id === selectedId) ?? null;
+  const selectedCar = selectedProperty ? carOf(selectedProperty) : null;
+
+  async function copyCar() {
+    if (!selectedCar) return;
+    try {
+      await navigator.clipboard.writeText(selectedCar);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      // navegador sem acesso à área de transferência (http, permissão): ignora
+    }
+  }
 
   // ?car=... na URL: veio de um clique na tela de Propriedades, pra abrir já
   // focado nessa propriedade
@@ -81,6 +97,7 @@ export default function PropertyMapPage() {
   function select(id: string) {
     setSelectedId(id);
     setFocusTrigger((n) => n + 1);
+    setCopied(false);
   }
 
   // ao carregar (ou quando muda o ?car): foca a propriedade pedida na URL; sem
@@ -210,6 +227,32 @@ export default function PropertyMapPage() {
 
         {/* mapa */}
         <div className={`relative overflow-hidden ${CARD}`}>
+          {/* propriedade em destaque: nome + CAR, com botão pra copiar o código
+              (pra mandar pra alguém consultar no SICAR) */}
+          {selectedProperty && selectedCar && (
+            <div className="absolute inset-x-3 top-3 z-10 flex items-center gap-3 rounded-[8px] border border-line bg-card/95 px-3.5 py-2.5 shadow-[0_8px_24px_-12px_rgba(0,0,0,.35)] backdrop-blur">
+              <MapPin size={16} className="shrink-0 text-brand" />
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-[13px] font-semibold text-ink">
+                  {selectedProperty.name || 'Propriedade sem nome'}
+                </div>
+                <div className="truncate font-mono text-[11px] text-ink-soft" title={selectedCar}>
+                  {selectedCar}
+                </div>
+              </div>
+              <button
+                onClick={copyCar}
+                className={`inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[12px] font-semibold transition-colors ${
+                  copied
+                    ? 'border-ok/40 text-ok'
+                    : 'border-line text-brand hover:border-accent hover:text-brand-deep'
+                }`}
+              >
+                {copied ? <CheckCircle2 size={14} /> : <ClipboardCheck size={14} />}
+                {copied ? 'Copiado!' : 'Copiar CAR'}
+              </button>
+            </div>
+          )}
           {geoLoading && (
             <div className="absolute left-3 top-3 z-10 flex items-center gap-2 rounded-full border border-line bg-card/90 px-3 py-1 text-[11px] font-semibold text-ink-soft shadow-sm">
               <LandPlot size={13} className="text-accent" />

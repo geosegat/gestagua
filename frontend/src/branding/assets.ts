@@ -26,6 +26,15 @@ export const LOGO_INVERSE = '/brand/psa-logo-inverso.png';
 export const LOGO_SYMBOL = '/brand/psa-symbol.png';
 
 /**
+ * Foto do hero da landing: um rio corrente entre pedras e mata - a água é o
+ * centro do programa (Gestágua). Vai sob um véu chapado da marca.
+ */
+export const HERO_RIO = '/brand/hero-rio.jpg';
+
+/** Foto de faixa: mão plantando uma muda - restauração e o gancho de renda. */
+export const FOTO_PLANTIO = '/brand/foto-plantio.jpg';
+
+/**
  * O tema ainda está com o logo que veio de fábrica? Serve pra decidir se dá pra
  * usar a versão invertida - ela só existe pro logo do programa, então um logo
  * enviado pelo admin (white-label) precisa de outro tratamento sobre escuro.

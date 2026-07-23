@@ -2,15 +2,16 @@ import { motion, useInView, useReducedMotion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  CheckCircle2,
   ChevronRight,
   Droplets,
   FolderKanban,
   LandPlot,
+  Leaf,
   PackageOpen,
   Sprout,
   TreePine,
   Trees,
+  WalletCards,
   type RemixiconComponentType,
 } from '../icons';
 import { CARD, CARD_ELEVATION } from '../components/Card';
@@ -19,8 +20,10 @@ import PublicFooter from '../components/public/PublicFooter';
 import LoginDialog from '../components/public/LoginDialog';
 import { ResultStat } from '../components/public/Metric';
 import { useBranding } from '../branding/BrandingContext';
+import { FOTO_PLANTIO, HERO_RIO } from '../branding/assets';
 import { getKey } from '../lib/auth';
 import { formatNumber } from '../lib/format';
+import { RECURSO_TOTAL_REAIS, projectedCo2 } from '../lib/program';
 import { EASE, riseIn, stagger } from '../lib/motion';
 import { useGetPublicPortalQuery } from '../services/gestaguaApi';
 
@@ -33,10 +36,6 @@ import { useGetPublicPortalQuery } from '../services/gestaguaApi';
 /** Botão sólido da marca (mesma receita do login). */
 const CTA_SOLID =
   'inline-flex cursor-pointer items-center justify-center gap-2 rounded-[10px] bg-brand px-6 py-3 font-semibold text-on-brand transition-colors hover:bg-brand-deep';
-
-/** Variante quieta pra ações secundárias. */
-const CTA_QUIET =
-  'inline-flex cursor-pointer items-center justify-center gap-2 rounded-[10px] border-[1.5px] border-line bg-card px-5 py-[10.5px] text-sm font-semibold text-brand transition-colors hover:border-accent hover:text-brand-deep';
 
 /** Card de eixo de atuação (modalidades do Decreto 14.210/2026). */
 function PillarCard({
@@ -136,6 +135,9 @@ export default function LandingPage({ autoOpenLogin = false }: { autoOpenLogin?:
   const statsInView = useInView(statsRef, { once: true, margin: '-60px' });
 
   const summary = data?.summary;
+  // mesmos indicadores da Visão Geral e do portal: área planejada e CO₂
+  const plannedAreaHa = data?.restoration?.plannedAreaHa ?? null;
+  const co2Projected = plannedAreaHa === null ? null : projectedCo2(plannedAreaHa);
 
   // já autenticado e caiu em /login: vai direto pro painel
   useEffect(() => {
@@ -156,46 +158,76 @@ export default function LandingPage({ autoOpenLogin = false }: { autoOpenLogin?:
       />
       <LoginDialog open={loginOpen} onClose={() => setLoginOpen(false)} />
 
-      {/* hero */}
+      {/* hero: foto da Mata Atlântica sob um véu chapado da marca (cor sólida
+          com opacidade, nunca gradiente) pra o texto branco ficar legível */}
       <section className="relative overflow-hidden">
+        <img
+          src={HERO_RIO}
+          alt=""
+          aria-hidden
+          // ancora na base: a água fica embaixo na foto, então mostra o rio em
+          // vez de cortar pra mata do topo
+          className="absolute inset-0 h-full w-full object-cover object-bottom"
+        />
+        <div aria-hidden className="absolute inset-0 bg-brand/85" />
         <Ripples logoUrl={branding.logoUrl} />
         <motion.div
           variants={stagger}
           initial="hidden"
           animate="show"
-          className={`${PUBLIC_CONTAINER} relative pb-20 pt-16 md:pt-24`}
+          className={`${PUBLIC_CONTAINER} relative pb-28 pt-16 md:pb-32 md:pt-24`}
         >
           <motion.div
             variants={riseIn}
-            className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-brand/60"
+            className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-on-brand/55"
           >
-            Painel público de resultados
+            Programa Municipal de Pagamento por Serviços Ambientais
           </motion.div>
           <motion.h1
             variants={riseIn}
-            className="max-w-[620px] font-display text-[38px] font-semibold leading-[1.12] text-brand-deep md:text-[46px]"
+            className="max-w-[640px] font-display text-[38px] font-semibold leading-[1.1] text-on-brand md:text-[48px]"
           >
-            Cuidar da água começa na propriedade rural.
+            Cuidar da água é cuidar da vida.
           </motion.h1>
           <motion.p
             variants={riseIn}
-            className="mt-5 max-w-[560px] text-[15px] leading-relaxed text-ink-soft"
+            className="mt-5 max-w-[560px] text-[15px] leading-relaxed text-on-brand/80"
           >
-            O {branding.productName} acompanha projetos de conservação e restauração junto a
-            produtores rurais: nascentes e vegetação nativa protegidas, áreas de preservação em
-            recuperação e modalidades produtivas que mantêm a água no território. Os resultados
-            ficam reunidos aqui, de forma aberta e atualizada.
+            O {branding.productName} transforma a preservação ambiental em geração de renda para as
+            famílias rurais de Alegre: remunera quem protege nascentes e vegetação nativa, recupera
+            áreas degradadas e mantém a água no território. Os resultados ficam reunidos aqui, de
+            forma aberta e atualizada.
           </motion.p>
           <motion.div variants={riseIn} className="mt-8 flex flex-wrap items-center gap-3">
-            <button onClick={() => navigate('/resultados')} className={CTA_SOLID}>
+            <button
+              onClick={() => navigate('/resultados')}
+              className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-[10px] bg-on-brand px-6 py-3 font-semibold text-brand transition-colors hover:bg-on-brand/90"
+            >
               Conhecer os resultados
               <ChevronRight size={17} />
             </button>
-            <a href="#resultados" className={CTA_QUIET}>
+            <a
+              href="#resultados"
+              className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-[10px] border-[1.5px] border-on-brand/40 px-5 py-[10.5px] text-sm font-semibold text-on-brand transition-colors hover:bg-on-brand/10"
+            >
               Ver os números principais
             </a>
           </motion.div>
         </motion.div>
+
+        {/* onda na base suaviza a passagem do hero escuro pro fundo claro. É uma
+            forma sólida (fill da cor paper), não gradiente, e ecoa o tema água. */}
+        <svg
+          aria-hidden
+          preserveAspectRatio="none"
+          viewBox="0 0 1440 80"
+          className="absolute inset-x-0 bottom-0 h-[64px] w-full md:h-[80px]"
+        >
+          <path
+            d="M0,52 C360,86 1080,18 1440,52 L1440,80 L0,80 Z"
+            fill="var(--color-paper)"
+          />
+        </svg>
       </section>
 
       {/* vitrine de resultados */}
@@ -234,24 +266,25 @@ export default function LandingPage({ autoOpenLogin = false }: { autoOpenLogin?:
               />
               <ResultStat
                 icon={LandPlot}
-                value={summary?.totalAreaHa ?? null}
+                value={plannedAreaHa}
                 suffix="ha"
-                label="Área acompanhada"
+                label="Área planejada"
                 started={statsInView}
                 loading={isLoading}
               />
               <ResultStat
-                icon={TreePine}
-                value={summary?.nativeVegetationAreaHa ?? null}
-                suffix="ha"
-                label="Vegetação nativa"
+                icon={WalletCards}
+                value={RECURSO_TOTAL_REAIS}
+                prefix="R$"
+                label="Recurso total"
                 started={statsInView}
                 loading={isLoading}
               />
               <ResultStat
-                icon={Droplets}
-                value={summary?.totalSprings ?? null}
-                label="Nascentes"
+                icon={Leaf}
+                value={co2Projected}
+                suffix="tCO₂e"
+                label="CO₂ projetado"
                 started={statsInView}
                 loading={isLoading}
               />
@@ -340,24 +373,62 @@ export default function LandingPage({ autoOpenLogin = false }: { autoOpenLogin?:
         </motion.div>
       </section>
 
-      {/* compromisso de transparência */}
-      <section className={`${PUBLIC_CONTAINER} mt-16`}>
+      {/* faixa temática: foto de plantio sob véu chapado da marca (sem
+          gradiente), com o gancho de renda + restauração */}
+      <section className="relative mt-20 overflow-hidden">
+        <img
+          src={FOTO_PLANTIO}
+          alt=""
+          aria-hidden
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        <div aria-hidden className="absolute inset-0 bg-brand/80" />
+        <div className={`${PUBLIC_CONTAINER} relative py-16 text-center`}>
+          <p className="mx-auto max-w-[680px] font-display text-[22px] font-semibold leading-snug text-on-brand md:text-[26px]">
+            Cada muda plantada e cada nascente protegida vira renda para uma família rural de
+            Alegre.
+          </p>
+        </div>
+      </section>
+
+      {/* alinhamento com os ODS da ONU */}
+      <section className={`${PUBLIC_CONTAINER} mt-20`}>
+        <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-brand/60">
+          Agenda 2030
+        </div>
+        <h2 className="font-display text-[27px] font-semibold leading-tight text-brand-deep">
+          Alinhado aos Objetivos de Desenvolvimento Sustentável
+        </h2>
+        <p className="mt-2 max-w-[620px] text-[14px] leading-relaxed text-ink-soft">
+          A ação local em Alegre conecta-se às metas globais da ONU para água, clima e
+          biodiversidade.
+        </p>
+
         <motion.div
-          variants={riseIn}
+          variants={stagger}
           initial="hidden"
           whileInView="show"
-          viewport={{ once: true, margin: '-40px' }}
-          className="flex justify-center gap-3.5 border-y border-line py-8"
+          viewport={{ once: true, margin: '-60px' }}
+          className="mt-7 grid gap-3.5 sm:grid-cols-3"
         >
-          <span className="mt-0.5 inline-flex shrink-0 text-accent">
-            <CheckCircle2 size={19} />
-          </span>
-          <div>
-            <div className="text-[13.5px] font-semibold">Sem dados pessoais</div>
-            <p className="mt-1 text-[12.5px] leading-relaxed text-ink-soft">
-              Produtores e propriedades aparecem sempre somados, nunca identificados.
-            </p>
-          </div>
+          <PillarCard
+            icon={Droplets}
+            badge="ODS 6"
+            title="Água potável e saneamento"
+            text="Proteção das nascentes e dos cursos d'água dentro das propriedades participantes."
+          />
+          <PillarCard
+            icon={Sprout}
+            badge="ODS 13"
+            title="Ação contra a mudança climática"
+            text="Mais cobertura florestal e carbono retido nas áreas em recuperação."
+          />
+          <PillarCard
+            icon={TreePine}
+            badge="ODS 15"
+            title="Vida terrestre"
+            text="Restauração de APPs e sistemas agroflorestais que devolvem a mata nativa ao território."
+          />
         </motion.div>
       </section>
 

@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { AlertTriangle, Leaf, WalletCards } from '../icons';
 import { formatCurrency, formatNumber } from '../lib/format';
+import { RECURSO_TOTAL_REAIS } from '../lib/program';
 import {
   modalityClassification,
   modalityPresentation,
@@ -175,6 +176,17 @@ export default function OverviewIndicators({ data }: { data: IndicatorsResponse 
               </p>
             </div>
             <WalletCards size={22} className="shrink-0 text-brand" />
+          </div>
+
+          {/* recurso total do programa (valor oficial da prefeitura) no topo,
+              pra dar contexto aos valores reais de execução/pagamento abaixo */}
+          <div className="mb-5 border-b border-line pb-5">
+            <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-soft">
+              Recurso total do programa
+            </div>
+            <div className="mt-1.5 font-display text-[30px] font-semibold leading-none text-brand-deep">
+              {formatCurrency(RECURSO_TOTAL_REAIS)}
+            </div>
           </div>
 
           <div className="mb-5 border-l-2 border-accent pl-3 text-[11.5px] leading-relaxed text-ink-soft">
