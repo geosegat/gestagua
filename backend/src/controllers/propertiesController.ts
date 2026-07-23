@@ -20,6 +20,7 @@ function mapProperty(row: PropertyRow): Property {
     totalAreaHa: row.totalArea,
     nativeVegetationAreaHa: row.nativeVegetationArea,
     totalSprings: row.totalSprings,
+    propertyCode: row.propertyCode,
     ruralEnvironmentalRegistry: row.ruralEnvironmentalRegistry,
     ruralEnvironmentalRegistryStatus: row.ruralEnvironmentalRegistryStatus,
     totalProjects: row.total_projetos,
@@ -56,6 +57,7 @@ export async function listar(
       ` AND (${buscaSemAcento('pr.name', placeholder)}` +
       ` OR ${buscaSemAcento('pr.community', placeholder)}` +
       ` OR ${buscaSemAcento('u.name', placeholder)}` +
+      ` OR pr."propertyCode" ILIKE ${placeholder}` +
       ` OR pr."ruralEnvironmentalRegistry" ILIKE ${placeholder})`;
   }
 
@@ -71,6 +73,7 @@ export async function listar(
   const rowsQuery = await db.query<PropertyRow>(
     `SELECT pr.id, pr.name, pr.community, pr."totalArea",
             pr."nativeVegetationArea", pr."totalSprings",
+            pr."propertyCode",
             pr."ruralEnvironmentalRegistry",
             pr."ruralEnvironmentalRegistryStatus",
             a.city, a.state, a.latitude, a.longitude,

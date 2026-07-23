@@ -40,21 +40,21 @@ const COLUMNS: Column<Property>[] = [
     cell: (property) => formatArea(property.totalAreaHa),
   },
   {
-    header: 'CAR',
-    tdClassName: 'max-w-[230px]',
+    header: 'Código do imóvel (CAR)',
+    tdClassName: 'max-w-[300px]',
     cell: (property) => {
-      const registry = property.ruralEnvironmentalRegistry?.trim();
-      if (!registry) return 'Não informado';
+      const propertyCode = property.propertyCode?.trim();
+      if (!propertyCode) return 'Não informado';
 
       return (
         <a
           href={PUBLIC_CAR_URL}
           target="_blank"
           rel="noreferrer"
-          title={`Abrir a Consulta Pública do CAR e buscar por ${registry}`}
+          title={`Abrir a Consulta Pública do CAR e buscar por ${propertyCode}`}
           className="inline-flex max-w-full items-center gap-1.5 font-semibold text-brand underline decoration-accent/60 underline-offset-2 hover:text-accent"
         >
-          <span className="truncate">{registry}</span>
+          <span className="truncate">{propertyCode}</span>
           <ExternalLink size={13} className="shrink-0" aria-hidden="true" />
         </a>
       );
@@ -85,7 +85,7 @@ export default function PropertiesPage() {
 
       <DataTableCard
         title="Propriedades"
-        placeholder="Busque uma propriedade"
+        placeholder="Busque por propriedade, produtor ou código do imóvel"
         emptyMessage="Nenhuma propriedade encontrada com esse filtro."
         list={list}
         columns={COLUMNS}

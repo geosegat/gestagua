@@ -411,6 +411,7 @@ export interface Property {
   totalAreaHa: number | null;
   nativeVegetationAreaHa: number | null;
   totalSprings: number | null;
+  propertyCode: string | null;
   ruralEnvironmentalRegistry: string | null;
   ruralEnvironmentalRegistryStatus: string | null;
   totalProjects: number;
