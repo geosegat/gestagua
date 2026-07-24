@@ -155,9 +155,11 @@ export default function PropertyMapPage() {
         />
       )}
 
-      <div className="grid h-[calc(100vh-230px)] min-h-[460px] gap-4 lg:grid-cols-[320px_1fr]">
+      {/* no mobile empilha com alturas próprias (senão o mapa fica sem altura e
+          some); no desktop vira grid lado a lado ocupando a tela toda */}
+      <div className="flex flex-col gap-4 lg:grid lg:h-[calc(100vh-230px)] lg:min-h-[460px] lg:grid-cols-[320px_1fr]">
         {/* lista de propriedades */}
-        <div className={`flex flex-col overflow-hidden ${CARD}`}>
+        <div className={`flex max-h-[42vh] flex-col overflow-hidden lg:max-h-none ${CARD}`}>
           <div className="border-b border-line px-3 py-2">
             <div className="flex items-center gap-2 rounded-md border border-line bg-surface px-3 py-1.5 focus-within:border-brand/50">
               <Search size={13} className="shrink-0 text-ink-soft" />
@@ -225,8 +227,8 @@ export default function PropertyMapPage() {
           </div>
         </div>
 
-        {/* mapa */}
-        <div className={`relative overflow-hidden ${CARD}`}>
+        {/* mapa: altura fixa no mobile, herda o grid no desktop */}
+        <div className={`relative h-[62vh] overflow-hidden lg:h-auto ${CARD}`}>
           {/* propriedade em destaque: nome + CAR, com botão pra copiar o código
               (pra mandar pra alguém consultar no SICAR) */}
           {selectedProperty && selectedCar && (
