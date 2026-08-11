@@ -255,7 +255,7 @@ export default function LandingPage({ autoOpenLogin = false }: { autoOpenLogin?:
               variants={stagger}
               initial="hidden"
               animate={statsInView ? 'show' : 'hidden'}
-              className="mx-auto mt-9 grid max-w-[860px] grid-cols-2 gap-3.5 lg:grid-cols-4"
+              className="mx-auto mt-9 grid max-w-[860px] grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4"
             >
               <ResultStat
                 icon={FolderKanban}

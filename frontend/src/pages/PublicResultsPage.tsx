@@ -263,7 +263,7 @@ export default function PublicResultsPage() {
           variants={stagger}
           initial="hidden"
           animate={heroInView ? 'show' : 'hidden'}
-          className="grid grid-cols-2 gap-3.5 lg:grid-cols-4"
+          className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4"
         >
           <ResultStat
             icon={FolderKanban}
