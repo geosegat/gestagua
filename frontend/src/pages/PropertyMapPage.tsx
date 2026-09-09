@@ -156,12 +156,13 @@ export default function PropertyMapPage() {
         />
       )}
 
-      {/* no mobile empilha com alturas próprias (senão o mapa fica sem altura e
-          some); no desktop vira grid lado a lado ocupando a tela toda: lista,
-          mapa e a ficha do imóvel selecionado */}
-      <div className="flex flex-col gap-4 lg:grid lg:h-[calc(100vh-230px)] lg:min-h-[460px] lg:grid-cols-[240px_minmax(0,1fr)_300px] xl:grid-cols-[300px_minmax(0,1fr)_340px]">
+      {/* três larguras: no mobile empilha com alturas próprias (senão o mapa
+          fica sem altura e some); no lg a lista vai pro lado do mapa e a ficha
+          desce pra baixo em largura cheia (com a barra lateral do app, três
+          colunas aqui espremeriam o mapa); só no xl as três dividem a tela. */}
+      <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[240px_minmax(0,1fr)] xl:h-[calc(100vh-230px)] xl:min-h-[460px] xl:grid-cols-[300px_minmax(0,1fr)_340px]">
         {/* lista de propriedades */}
-        <div className={`flex max-h-[42vh] flex-col overflow-hidden lg:max-h-none ${CARD}`}>
+        <div className={`flex max-h-[42vh] flex-col overflow-hidden lg:h-[68vh] lg:max-h-none xl:h-auto ${CARD}`}>
           <div className="border-b border-line px-3 py-2">
             <div className="flex items-center gap-2 rounded-md border border-line bg-surface px-3 py-1.5 focus-within:border-brand/50">
               <Search size={13} className="shrink-0 text-ink-soft" />
@@ -230,7 +231,7 @@ export default function PropertyMapPage() {
         </div>
 
         {/* mapa: altura fixa no mobile, herda o grid no desktop */}
-        <div className={`relative h-[62vh] overflow-hidden lg:h-auto ${CARD}`}>
+        <div className={`relative h-[62vh] overflow-hidden lg:h-[68vh] xl:h-auto ${CARD}`}>
           {/* propriedade em destaque: nome + CAR, com botão pra copiar o código
               (pra mandar pra alguém consultar no SICAR) */}
           {selectedProperty && selectedCar && (
@@ -279,7 +280,7 @@ export default function PropertyMapPage() {
 
         {/* ficha do CAR selecionado: cadastro no SICAR + vínculo e modalidades
             no programa */}
-        <div className="max-h-[70vh] lg:max-h-none lg:min-h-0">
+        <div className="max-h-[70vh] lg:col-span-2 lg:max-h-[52vh] xl:col-span-1 xl:max-h-none xl:min-h-0">
           <PropertyDataCard car={selectedCar} />
         </div>
       </div>

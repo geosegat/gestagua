@@ -107,12 +107,14 @@ export default function PropertyDataCard({ car }: { car: string | null }) {
   const statusTone = sicarStatusTone(sicar?.ind_status);
 
   return (
-    <div className={`brand-scroll h-full overflow-y-auto p-5 ${CARD}`}>
+    <div className={`brand-scroll @container h-full overflow-y-auto p-5 ${CARD}`}>
       <h2 className="font-display text-[15px] font-semibold text-brand-deep">
         Dados do Imóvel
       </h2>
 
-      <div className="mt-4 space-y-3.5">
+      {/* container query, não breakpoint de tela: o card é coluna estreita ao
+          lado do mapa e faixa larga embaixo dele - quem manda é a largura dele */}
+      <div className="mt-4 space-y-3.5 @md:grid @md:grid-cols-2 @md:gap-x-7 @md:gap-y-3.5 @md:space-y-0 @3xl:grid-cols-3">
         <Field label="Código CAR">
           <span className="break-all font-mono text-[12px] text-ink-soft">{car}</span>
         </Field>
