@@ -4,6 +4,7 @@ import { CheckCircle2, ClipboardCheck, LandPlot, MapPin, Search } from '../icons
 import ApiErrorBanner from '../components/ApiErrorBanner';
 import { CARD } from '../components/Card';
 import CarMap, { type CarLayer } from '../components/map/CarMap';
+import PropertyDataCard from '../components/property/PropertyDataCard';
 import { getApiErrorMessage } from '../lib/apiError';
 import { formatNumber } from '../lib/format';
 import { useGetBulkImoveisQuery, normalizeCarCode } from '../services/geoApi';
@@ -156,8 +157,9 @@ export default function PropertyMapPage() {
       )}
 
       {/* no mobile empilha com alturas próprias (senão o mapa fica sem altura e
-          some); no desktop vira grid lado a lado ocupando a tela toda */}
-      <div className="flex flex-col gap-4 lg:grid lg:h-[calc(100vh-230px)] lg:min-h-[460px] lg:grid-cols-[320px_1fr]">
+          some); no desktop vira grid lado a lado ocupando a tela toda: lista,
+          mapa e a ficha do imóvel selecionado */}
+      <div className="flex flex-col gap-4 lg:grid lg:h-[calc(100vh-230px)] lg:min-h-[460px] lg:grid-cols-[240px_minmax(0,1fr)_300px] xl:grid-cols-[300px_minmax(0,1fr)_340px]">
         {/* lista de propriedades */}
         <div className={`flex max-h-[42vh] flex-col overflow-hidden lg:max-h-none ${CARD}`}>
           <div className="border-b border-line px-3 py-2">
@@ -273,6 +275,12 @@ export default function PropertyMapPage() {
               onLayerClick={select}
             />
           )}
+        </div>
+
+        {/* ficha do CAR selecionado: cadastro no SICAR + vínculo e modalidades
+            no programa */}
+        <div className="max-h-[70vh] lg:max-h-none lg:min-h-0">
+          <PropertyDataCard car={selectedCar} />
         </div>
       </div>
     </>

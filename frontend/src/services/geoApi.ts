@@ -33,11 +33,32 @@ export interface BulkImoveisResponse {
   data: BulkImovelItem[];
 }
 
+/**
+ * Ficha cadastral de um imóvel no SICAR. Mesmos campos do bulk, mais a situação
+ * (`des_condic`) e as áreas de APP/reserva legal - é o que alimenta o card
+ * "Dados do Imóvel".
+ */
+export interface ImovelDetalhe extends BulkImovelItem {
+  source?: string;
+  ind_status?: string | null;
+  ind_tipo?: string | null;
+  des_condic?: string | null;
+  num_area?: number | null;
+  mod_fiscal?: number | null;
+  cod_estado?: string | null;
+  app?: unknown[];
+  rl?: unknown[];
+}
+
 export const geoApi = createApi({
   reducerPath: 'geoApi',
   baseQuery: fetchBaseQuery({ baseUrl: GEO_BASE }),
   keepUnusedDataFor: 600,
   endpoints: (builder) => ({
+    // ficha de um imóvel só, pelo código CAR (o bulk não traz a situação)
+    getImovel: builder.query<ImovelDetalhe, string>({
+      query: (code) => `/imovel/${encodeURIComponent(normalizeCarCode(code))}`,
+    }),
     getBulkImoveis: builder.query<BulkImoveisResponse, string[]>({
       // ordena os códigos pra a chave de cache não variar com a ordem
       query: (codes) => ({
@@ -49,4 +70,4 @@ export const geoApi = createApi({
   }),
 });
 
-export const { useGetBulkImoveisQuery } = geoApi;
+export const { useGetBulkImoveisQuery, useGetImovelQuery } = geoApi;

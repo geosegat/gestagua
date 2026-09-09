@@ -38,3 +38,33 @@ export interface Property {
     longitude: Numeric;
   };
 }
+
+/** Modalidades implantadas na propriedade (agregado das lands dos projetos). */
+export interface PropertyModalityRow extends QueryResultRow {
+  modalityId: string;
+  name: string;
+  code: string;
+  type: string;
+  total_implantacoes: number;
+  plannedArea: Numeric;
+  executedArea: Numeric;
+}
+
+export interface PropertyModality {
+  id: string;
+  name: string;
+  code: string;
+  type: string;
+  totalImplantations: number;
+  plannedAreaHa: number | null;
+  executedAreaHa: number | null;
+}
+
+/** Resposta de /propriedades/car/:codigo: o que o programa sabe sobre um CAR. */
+export interface PropertyCarLink {
+  car: string;
+  dataSource: string;
+  linked: boolean;
+  property: Property | null;
+  modalities: PropertyModality[];
+}
