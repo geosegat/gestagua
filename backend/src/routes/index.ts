@@ -45,6 +45,8 @@ router.get(
 router.get('/projetos/:id', asyncHandler(projetos.detalhe));
 router.get('/produtores', asyncHandler(produtores.listar));
 router.get('/propriedades', asyncHandler(propriedades.listar));
+// vínculo de um código CAR com o programa (propriedade + modalidades)
+router.get('/propriedades/car/:codigo', asyncHandler(propriedades.porCar));
 router.get('/mobilizacoes', asyncHandler(mobilizacoes.listar));
 router.get('/programs', asyncHandler(programs.list));
 

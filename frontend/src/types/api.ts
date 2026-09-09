@@ -430,6 +430,29 @@ export interface PropertiesResponse {
   properties: Property[];
 }
 
+/** Modalidade implantada numa propriedade (agregado das lands dos projetos). */
+export interface PropertyModality {
+  id: string;
+  name: string;
+  code: string;
+  type: string;
+  totalImplantations: number;
+  plannedAreaHa: number | null;
+  executedAreaHa: number | null;
+}
+
+/**
+ * O que o programa sabe sobre um código CAR. `linked: false` = o imóvel existe
+ * no SICAR mas nenhuma propriedade do Gestágua aponta pra esse CAR.
+ */
+export interface PropertyCarLinkResponse {
+  car: string;
+  dataSource: string;
+  linked: boolean;
+  property: Property | null;
+  modalities: PropertyModality[];
+}
+
 export interface Mobilization {
   id: string;
   local: string;

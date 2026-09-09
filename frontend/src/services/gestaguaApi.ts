@@ -19,6 +19,7 @@ import type {
   ProjectStageActivitiesResponse,
   ProjectStagesResponse,
   PropertiesResponse,
+  PropertyCarLinkResponse,
   PublicPortalResponse,
   SyncState,
   PageParams,
@@ -147,6 +148,12 @@ export const gestaguaApi = createApi({
       }),
       providesTags: ['Properties'],
     }),
+    // vínculo de um código CAR com o programa: propriedade + modalidades. Os
+    // dados cadastrais do imóvel vêm do SICAR (geoApi), não daqui.
+    getPropertyByCar: builder.query<PropertyCarLinkResponse, string>({
+      query: (car) => `/propriedades/car/${encodeURIComponent(car)}`,
+      providesTags: ['Properties'],
+    }),
     getMobilizations: builder.query<MobilizationsResponse, PageParams>({
       query: ({ page, limit, search }) => ({
         url: '/mobilizacoes',
@@ -189,6 +196,7 @@ export const {
   useGetProjectStageActivitiesQuery,
   useGetProducersQuery,
   useGetPropertiesQuery,
+  useGetPropertyByCarQuery,
   useGetMobilizationsQuery,
   useGetProgramsQuery,
   useGetSyncStateQuery,
