@@ -12,10 +12,21 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 const GEO_BASE = (import.meta.env.VITE_GEO_API_BASE_URL ?? '').replace(/\/$/, '');
 
+const CAR_RE = /^([A-Z]{2}-\d{7}-[A-F0-9]{32})/i;
+
 /** Normaliza o CAR pro formato canônico (UF-IBGE-HASH), ignorando sufixos. */
 export function normalizeCarCode(code: string): string {
-  const match = code.trim().match(/^([A-Z]{2}-\d{7}-[A-F0-9]{32})/i);
+  const match = code.trim().match(CAR_RE);
   return match ? match[1].toUpperCase() : code.trim().toUpperCase();
+}
+
+/**
+ * O código tem cara de CAR? Nem todo registro ambiental do cadastro é um: há
+ * propriedade com número de protocolo no lugar do CAR, e nem o SICAR nem a API
+ * do programa aceitam esses.
+ */
+export function isCarCode(code: string | null | undefined): boolean {
+  return CAR_RE.test((code ?? '').trim());
 }
 
 export interface CarGeometry {

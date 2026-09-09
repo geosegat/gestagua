@@ -9,7 +9,7 @@ import {
   sicarTipoLabel,
   type SicarTone,
 } from '../../lib/sicar';
-import { useGetImovelQuery } from '../../services/geoApi';
+import { isCarCode, useGetImovelQuery } from '../../services/geoApi';
 import { useGetPropertyByCarQuery } from '../../services/gestaguaApi';
 import { CARD } from '../Card';
 
@@ -67,18 +67,24 @@ function Skeleton() {
 }
 
 export default function PropertyDataCard({ car }: { car: string | null }) {
-  const skip = !car;
+  const valid = isCarCode(car);
+  const skip = !valid;
   const imovel = useGetImovelQuery(car ?? '', { skip });
   const link = useGetPropertyByCarQuery(car ?? '', { skip });
 
-  if (!car) {
+  if (!car || !valid) {
     return (
       <div className={`grid h-full place-items-center p-8 text-center ${CARD}`}>
         <div>
           <LandPlot size={22} className="mx-auto text-ink-soft/60" />
           <p className="mt-2 text-[12.5px] text-ink-soft">
-            Selecione uma propriedade pra ver os dados do imóvel.
+            {car
+              ? 'O código cadastrado nesta propriedade não é um CAR do SICAR.'
+              : 'Selecione uma propriedade pra ver os dados do imóvel.'}
           </p>
+          {car && (
+            <p className="mt-1.5 break-all font-mono text-[11px] text-ink-soft/70">{car}</p>
+          )}
         </div>
       </div>
     );
