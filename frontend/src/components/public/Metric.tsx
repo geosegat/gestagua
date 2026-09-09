@@ -54,21 +54,23 @@ export function ResultStat({
   return (
     <motion.div
       variants={riseIn}
-      className={`${INNER_CARD} border border-line bg-paper/60 px-4 py-6 text-center`}
+      className={`${INNER_CARD} border border-line bg-paper/60 px-2.5 py-5 text-center sm:px-4 sm:py-6`}
     >
       {loading ? (
         <div className="mx-auto h-8 w-24 animate-pulse rounded bg-line/60" />
       ) : (
-        <div className="flex items-baseline justify-center gap-2.5">
-          <Icon size={21} className="translate-y-[3px] text-accent" />
-          <span className="font-display text-[30px] font-semibold leading-none text-brand-deep">
+        <div className="flex flex-wrap items-baseline justify-center gap-x-2 gap-y-0.5">
+          <Icon size={19} className="translate-y-[2px] text-accent" />
+          <span className="font-display text-[24px] font-semibold leading-none text-brand-deep sm:text-[30px]">
             {prefix && value !== null && (
-              <span className="mr-1 text-[19px] text-ink-soft">{prefix}</span>
+              <span className="mr-1 text-[15px] text-ink-soft sm:text-[19px]">{prefix}</span>
             )}
             <CountUp value={value} started={started} />
           </span>
           {suffix && value !== null && (
-            <span className="text-[15px] font-semibold text-ink-soft">{suffix}</span>
+            <span className="text-[13px] font-semibold text-ink-soft sm:text-[15px]">
+              {suffix}
+            </span>
           )}
         </div>
       )}

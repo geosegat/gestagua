@@ -238,7 +238,7 @@ export default function LandingPage({ autoOpenLogin = false }: { autoOpenLogin?:
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-60px' }}
             transition={{ duration: 0.6, ease: EASE }}
-            className={`${CARD} px-6 py-12 md:px-14`}
+            className={`${CARD} px-4 py-12 sm:px-6 md:px-14`}
           >
             <div className="mx-auto max-w-[640px] text-center">
               <h2 className="font-display text-[27px] font-semibold leading-tight text-brand-deep">
