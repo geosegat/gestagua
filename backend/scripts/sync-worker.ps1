@@ -2,7 +2,7 @@
 #  sync-worker.ps1 - RODAR NA VPS
 #
 #  Atualiza o site: baixa os dados do Azure e publica na Railway.
-#  Dois passos, e é isso: nao passa pelo banco local da VPS.
+#  Dois passos, so isso: nao passa pelo banco local da VPS.
 #
 #      Azure (mvgi_stage)  --pg_dump-->  arquivo  --pg_restore-->  Railway
 #
@@ -97,23 +97,31 @@ $dumpFile = Join-Path $WorkDir "gestagua_sync.dump"
 Invoke-Api "POST" @{ event = "start"; trigger = $trigger } | Out-Null
 
 try {
-  Step "Baixando os dados do sistema (Azure)…"
+  Step "Baixando os dados do sistema (Azure)..."
   & $pgDump --dbname=$AzureUrl -Fc -f $dumpFile
   if ($LASTEXITCODE -ne 0) { throw "pg_dump do Azure falhou (codigo $LASTEXITCODE)." }
   $sizeMb = [math]::Round((Get-Item $dumpFile).Length / 1MB, 1)
   if ($sizeMb -lt 0.1) { throw "o download veio vazio ($sizeMb MB)." }
-  Step "Download concluido ($sizeMb MB). Publicando no site (Railway)…"
+  Step "Download concluido ($sizeMb MB). Publicando no site (Railway)..."
 
   # --clean --if-exists deixa a Railway inconsistente por alguns segundos; com o
   # volume atual e rapido, mas e a janela em que o site pode oscilar.
   & $pgRestore --dbname=$TargetUrl --no-owner --no-privileges --clean --if-exists $dumpFile
   # pg_restore sai != 0 por avisos de owner/extensao mesmo dando certo; quem
   # decide de verdade e a conferencia abaixo
-  Step "Publicacao concluida. Conferindo…"
+  Step "Publicacao concluida. Conferindo..."
 
-  $projetos = (& $psql --dbname=$TargetUrl -tAc "SELECT count(*) FROM projects" 2>$null | Select-Object -First 1)
-  if (-not $projetos) { throw "nao consegui ler a tabela projects na Railway apos publicar." }
-  Step "Tudo certo: o site esta com $projetos projetos."
+  # Conferencia final: conta so os projetos ATIVOS do Gestagua, com a mesma
+  # regra que a API usa. Contar a tabela `projects` inteira daria o total de
+  # todos os clientes da ARVO (na casa de 1500), que nao diz nada sobre este
+  # programa e assusta quem le o painel.
+  # O id abaixo tem que bater com `gestaguaProgramId` em src/config.ts.
+  # As aspas simples dobradas sao o escape de aspa simples dentro de string
+  # literal do PowerShell; a string chega no psql com aspas simples normais.
+  $sqlProjetos = 'SELECT count(*) FROM projects WHERE "programId" = ''e0c5918f-32a5-44bd-917d-ad43fd3111b0'' AND "deletedAt" IS NULL AND status NOT IN (''canceled'', ''archived'')'
+  $projetos = (& $psql --dbname=$TargetUrl -tAc $sqlProjetos 2>$null | Select-Object -First 1)
+  if (-not $projetos) { throw "nao consegui contar os projetos do Gestagua na Railway apos publicar." }
+  Step "Tudo certo: o Gestagua esta com $projetos projetos ativos."
 
   Invoke-Api "POST" @{ event = "finish"; ok = $true } | Out-Null
   Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Atualizacao concluida com sucesso."

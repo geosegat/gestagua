@@ -1,80 +1,115 @@
-# Sincronizacao VPS -> Railway
+# Sincronizacao dos dados: Azure -> Railway
 
-O PostgreSQL da Railway e uma copia persistente e nao acompanha o clone diario
-da VPS sozinho. O script `scripts/sync-railway.ps1` le o banco apontado por
-`C:\arvo-sync\banco_ativo.txt`, gera um dump e restaura esse conteudo no banco
-fixo da Railway.
-
-## 1. Preparar os segredos na VPS
-
-Abra PowerShell como administrador e defina duas variaveis de ambiente da
-maquina. Use a `DATABASE_PUBLIC_URL` do servico Postgres da Railway, nunca a URL
-privada `railway.internal`:
-
-```powershell
-[Environment]::SetEnvironmentVariable(
-  "GESTAGUA_SOURCE_DB_PASSWORD",
-  "SENHA_DO_POSTGRES_DA_VPS",
-  "Machine"
-)
-
-[Environment]::SetEnvironmentVariable(
-  "GESTAGUA_RAILWAY_DATABASE_PUBLIC_URL",
-  "DATABASE_PUBLIC_URL_COPIADA_DA_RAILWAY",
-  "Machine"
-)
-```
-
-Feche e abra o PowerShell para carregar as variaveis. Nao coloque esses valores
-no Git, no `.env.example` ou no comando da tarefa agendada.
-
-## 2. Fazer a primeira carga
-
-Na VPS, a partir da pasta do backend:
-
-```powershell
-.\scripts\sync-railway.ps1
-```
-
-O script valida a conexao, cria um dump temporario, restaura tudo em uma unica
-transacao e confirma a quantidade de projetos. O log fica em:
+Como os dados do GestAgua chegam no site.
 
 ```text
-C:\arvo-sync\logs\sync-railway.log
+Azure (mvgi_stage)  --pg_dump-->  arquivo  --pg_restore-->  Railway
+                    \___________ sync-worker.ps1, na VPS ___________/
 ```
 
-## 3. Automatizar depois do clone diario
+O worker puxa **direto do Azure**. Ele nao passa pelo Postgres local da VPS e
+nao usa o `banco_ativo.txt`. A cada etapa ele avisa a API
+(`POST /admin/sync event=log`), e o painel mostra o progresso ao vivo. A VPS so
+faz chamadas de saida, sem abrir porta nenhuma.
 
-O melhor ponto para executar a sincronizacao e no final do script que atualiza
-`banco_ativo.txt`, somente depois de o clone terminar com sucesso:
+## Onde as coisas ficam na VPS
+
+| Item | Caminho |
+| --- | --- |
+| Worker em producao | `C:\arvo-sync\sync-worker.ps1` |
+| Pasta de trabalho (dump temporario) | `C:\arvo-sync\tmp` |
+| App da API legada | `C:\arvo-sync\api-prefeitura` |
+
+O worker fica na **raiz** do `C:\arvo-sync`, nao dentro de
+`api-prefeitura\scripts`. A copia versionada deste repositorio esta em
+`backend/scripts/sync-worker.ps1`: ao mudar o script, atualize a VPS tambem.
+
+O `sync-agent.ps1` ao lado e a versao antiga, substituida pelo worker. Ignore.
+
+## Variaveis de ambiente (escopo Machine, definir uma vez)
 
 ```powershell
-& "C:\arvo-sync\api-prefeitura\scripts\sync-railway.ps1"
-if ($LASTEXITCODE -ne 0) {
-  throw "A sincronizacao com a Railway falhou."
-}
+setx /M GESTAGUA_API_URL     "https://gestagua-production.up.railway.app"
+setx /M GESTAGUA_API_KEY     "a mesma chave do x-api-key"
+setx /M GESTAGUA_AZURE_URL   "connection string do Postgres do Azure (origem)"
+setx /M GESTAGUA_TARGET_URL  "connection string PUBLICA do Postgres da Railway"
 ```
 
-Se o caminho real do backend na VPS for diferente, ajuste-o. Como alternativa,
-crie uma tarefa diaria alguns minutos depois da tarefa do clone:
+Use a `DATABASE_PUBLIC_URL` da Railway, nunca a URL privada `railway.internal`:
+a VPS esta fora da rede da Railway. Nao coloque esses valores no Git nem no
+`.env.example`.
+
+> **Armadilha ja paga.** O `GESTAGUA_API_KEY` e a **mesma** chave usada em
+> outros dois lugares: o login do painel e a variavel `API_KEY` da Railway.
+> Trocar a chave e esquecer da VPS derruba a sincronizacao **em silencio**: o
+> worker toma 401 na primeira chamada e nada e publicado. Foi o que aconteceu
+> entre 24/07/2026 e 08/09/2026, seis semanas sem ninguem perceber. Ao trocar a
+> chave, troque nos tres lugares.
+
+## Tarefas agendadas
+
+Duas tarefas, com papeis diferentes:
 
 ```powershell
-schtasks /create /f /tn "GestaguaSyncRailway" /sc daily /st 03:30 /ru SYSTEM /rl HIGHEST /tr "powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\arvo-sync\api-prefeitura\scripts\sync-railway.ps1"
+schtasks /create /f /tn "GestaguaSyncWorker" /sc minute /mo 2 /ru SYSTEM /rl HIGHEST /tr "powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\arvo-sync\sync-worker.ps1"
 ```
-
-Altere `03:30` para um horario posterior ao clone. Teste a tarefa manualmente:
 
 ```powershell
-schtasks /run /tn "GestaguaSyncRailway"
-Get-Content C:\arvo-sync\logs\sync-railway.log -Tail 50
+schtasks /create /f /tn "GestaguaSyncDiario" /sc daily /st 04:30 /ru SYSTEM /rl HIGHEST /tr "powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\arvo-sync\sync-worker.ps1 -Force"
 ```
 
-## Funcionamento em producao
+- **GestaguaSyncWorker** roda a cada 2 minutos **sem** `-Force`. Sem `-Force` o
+  worker so trabalha se encontrar um pedido `pending`, ou seja, se alguem clicou
+  em "Atualizar dados" no painel. Nos outros ciclos ele faz um GET, ve `idle` e
+  sai em um segundo. **E esta tarefa que faz o botao do painel funcionar.** Sem
+  ela o clique fica em "Na fila" para sempre.
+- **GestaguaSyncDiario** roda uma vez por dia **com** `-Force`, garantindo que o
+  site atualiza mesmo que ninguem clique. 04:30 evita disputar rede com o
+  `ArvoCloneBanco`, que roda por volta das 04:00.
 
-- VPS -> Railway: usa `DATABASE_PUBLIC_URL`, porque a VPS esta fora da rede da
-  Railway.
-- Backend Railway -> Postgres Railway: continua usando `DATABASE_URL`, pela rede
-  privada.
-- Se dump ou restore falhar, `--single-transaction` impede uma restauracao
-  parcial de ser confirmada.
-- Durante a troca diaria, consultas podem aguardar locks por alguns instantes.
+Ambas rodam como `SYSTEM`, que enxerga as variaveis de escopo Machine.
+
+Conferir:
+
+```powershell
+Get-ScheduledTask -TaskName "Gestagua*" | Get-ScheduledTaskInfo | Select-Object TaskName, LastRunTime, LastTaskResult, NextRunTime | Format-Table -AutoSize
+```
+
+## Rodar na mao
+
+```powershell
+& "C:\arvo-sync\sync-worker.ps1" -Force     # roda agora, ignorando o botao
+& "C:\arvo-sync\sync-worker.ps1"            # so roda se houver pedido pendente
+& "C:\arvo-sync\sync-worker.ps1" -WhatIf    # mostra o que faria, sem tocar em nada
+```
+
+## Detalhes que confundem
+
+- **A conferencia final diz "o Gestagua esta com N projetos ativos"** e usa a
+  mesma regra da API (filtra `programId`, ignora deletados, cancelados e
+  arquivados), entao o numero bate com o painel. Ate 09/2026 ela contava a
+  tabela `projects` inteira e mostrava ~1500, o total de todos os clientes da
+  ARVO. Se voce ainda ve esse numero, a VPS esta com a copia velha do script.
+- **O espelho na Railway carrega o banco inteiro da ARVO.** O que separa um
+  cliente do outro e o filtro `programId` em cada query. Rota nova sem esse
+  filtro expoe dado de outro cliente.
+- **Avisos do `pg_restore`** sobre owner e extensao sao normais e o script os
+  ignora de proposito. Quem decide sucesso e a conferencia com `psql` no fim.
+- **`--clean --if-exists`** deixa a Railway inconsistente por alguns segundos
+  durante o restore. Com o volume atual e rapido, mas e a janela em que o site
+  pode oscilar. Evite rodar com a prefeitura olhando.
+- **`sync-state.json`** mora em disco efemero na Railway. Um redeploy zera o
+  historico e o "atualizado em" do painel. O que se perde e so o indicador.
+- **Nao existe alerta de falha.** Se o sync quebrar de madrugada, ninguem sabe
+  ate abrir o painel. Melhoria pendente.
+
+## O que e legado
+
+Nao confundir com o fluxo acima:
+
+- **`ArvoCloneBanco`** (tarefa agendada) clona o Azure para o Postgres **local**
+  da VPS e atualiza o `banco_ativo.txt`. Nao encosta na Railway.
+- **`scripts/sync-railway.ps1`** publicava do Postgres local da VPS para a
+  Railway. Substituido pelo `sync-worker.ps1`, que vai direto na origem.
+- **`banco_ativo.txt` e o `POINTER_FILE`** pertencem a esse fluxo antigo, em que
+  a API lia o clone do dia na propria VPS.
