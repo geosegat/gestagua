@@ -25,6 +25,8 @@ export interface PublicPortalResponse {
     nativeVegetationAreaHa: number;
     totalSprings: number;
     totalImplementations: number;
+    /** Caixas de abelha, contadas a parte: medem unidade, nao area. */
+    beehiveInstallations: number;
   };
   finance: {
     totalInstallments: number;

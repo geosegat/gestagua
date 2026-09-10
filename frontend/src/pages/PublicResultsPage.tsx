@@ -308,7 +308,7 @@ export default function PublicResultsPage() {
         <Section
           kicker="Modalidades"
           title="Como o programa atua"
-          badge={`${formatNumber(summary?.totalImplementations ?? 0)} implantações`}
+          badge={`${formatNumber(summary?.totalImplementations ?? 0)} implantações de área`}
           description="Nomes e grupos conforme o Decreto 14.210/2026, combinando conservação, restauração e produção sustentável dentro das propriedades participantes."
         >
           <div className={`${CARD} p-6`}>

@@ -135,6 +135,13 @@ export default function OverviewIndicators({ data }: { data: IndicatorsResponse 
             <p className="mt-0.5 text-[12.5px] text-ink-soft">
               Enquadramento oficial, planejamento, APP e execução dos projetos ativos.
             </p>
+            {/* as duas contagens separadas: caixa de abelha mede unidade, não
+                hectare, e somada ao total inflava o número de implantações */}
+            <p className="mt-1.5 text-[11.5px] font-medium text-ink-soft">
+              {formatNumber(land.totalImplementations)} implantações de área
+              {land.beehiveInstallations > 0 &&
+                ` · ${formatNumber(land.beehiveInstallations)} caixas de abelha`}
+            </p>
           </div>
           <div className="text-right">
             <div className="font-display text-xl font-semibold text-brand">
@@ -154,8 +161,8 @@ export default function OverviewIndicators({ data }: { data: IndicatorsResponse 
             <AlertTriangle size={17} className="mt-0.5 shrink-0 text-warn" />
             <p>
               APP e área restaurada ainda não foram preenchidas nas{' '}
-              {formatNumber(land.totalImplementations)} implantações. Por isso a tabela mostra
-              “Não preenchido”, e não 0 ha como resultado confirmado.
+              {formatNumber(land.totalImplementations)} implantações de área. Por isso a
+              tabela mostra “Não preenchido”, e não 0 ha como resultado confirmado.
             </p>
           </div>
         )}

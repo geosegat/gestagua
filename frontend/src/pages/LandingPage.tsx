@@ -330,7 +330,7 @@ export default function LandingPage({ autoOpenLogin = false }: { autoOpenLogin?:
           </h2>
           {summary && (
             <span className="text-[12.5px] text-ink-soft">
-              {formatNumber(summary.totalImplementations)} implantações registradas
+              {formatNumber(summary.totalImplementations)} implantações de área registradas
             </span>
           )}
         </div>

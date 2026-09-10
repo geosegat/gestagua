@@ -26,6 +26,8 @@ export interface DashboardResponse {
     nativeVegetationAreaHa: number;
     totalSprings: number;
     totalImplementations: number;
+    /** Caixas de abelha, contadas a parte: medem unidade, nao area. */
+    beehiveInstallations: number;
   };
   modalities: DashboardModality[];
 }
@@ -338,6 +340,8 @@ export interface IndicatorsResponse {
   };
   land: {
     totalImplementations: number;
+    /** Caixas de abelha, contadas a parte: medem unidade, nao area. */
+    beehiveInstallations: number;
     plannedAreaHa: number;
     restoredAreaHa: number;
     restoredAreaCoverage: {

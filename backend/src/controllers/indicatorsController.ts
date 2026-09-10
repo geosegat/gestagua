@@ -11,6 +11,7 @@ import type {
   Numeric,
   YearQuery,
 } from '../types';
+import { separarImplantacoes } from '../utils/modalities';
 import { parseOptionalYear } from '../utils/validation';
 
 const PROJECT_YEAR_SQL = `
@@ -209,10 +210,13 @@ export async function summary(
     appPlannedAreaHa: decimal(row.appPlannedAreaHa),
     appAreaFilled: row.appAreaFilled,
   }));
-  const totalImplementations = modalities.reduce(
-    (total, modality) => total + modality.implementations,
-    0,
+  // caixa de abelha conta colmeia, não hectare: fica fora do total de área (e
+  // fora dos denominadores de cobertura logo abaixo), contada à parte
+  const { areaImplementations, beehiveInstallations } = separarImplantacoes(
+    modalities,
+    (modality) => modality.implementations,
   );
+  const totalImplementations = areaImplementations;
 
   const payment = paymentsQuery.rows[0];
   const cultures = carbonQuery.rows.map((row) => ({
@@ -256,6 +260,7 @@ export async function summary(
     },
     land: {
       totalImplementations,
+      beehiveInstallations,
       plannedAreaHa: decimal(
         modalities.reduce((total, modality) => total + modality.plannedAreaHa, 0),
       ),
@@ -263,20 +268,22 @@ export async function summary(
         modalities.reduce((total, modality) => total + modality.restoredAreaHa, 0),
       ),
       restoredAreaCoverage: {
-        filled: modalities.reduce(
-          (total, modality) => total + modality.restoredAreaFilled,
-          0,
-        ),
+        // numerador e denominador no mesmo universo: só modalidades de área,
+        // senão "filled" poderia passar do total
+        filled: separarImplantacoes(
+          modalities,
+          (modality) => modality.restoredAreaFilled,
+        ).areaImplementations,
         total: totalImplementations,
       },
       appPlannedAreaHa: decimal(
         modalities.reduce((total, modality) => total + modality.appPlannedAreaHa, 0),
       ),
       appAreaCoverage: {
-        filled: modalities.reduce(
-          (total, modality) => total + modality.appAreaFilled,
-          0,
-        ),
+        filled: separarImplantacoes(
+          modalities,
+          (modality) => modality.appAreaFilled,
+        ).areaImplementations,
         total: totalImplementations,
       },
       byModality: modalities,

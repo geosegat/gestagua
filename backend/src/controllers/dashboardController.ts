@@ -2,6 +2,7 @@ import type { Request, Response } from 'express';
 
 import config from '../config';
 import { getCurrentDb, getPool } from '../db';
+import { separarImplantacoes } from '../utils/modalities';
 import type {
   DashboardModalityRow,
   DashboardTotalsRow,
@@ -122,6 +123,11 @@ export async function summary(
     executedAreaHa: area(modality.executedAreaHa),
   }));
 
+  const implantacoes = separarImplantacoes(
+    modalities,
+    (modality) => modality.totalImplementations,
+  );
+
   return res.json({
     program: 'Gestagua',
     dataSource: getCurrentDb(),
@@ -135,10 +141,9 @@ export async function summary(
       totalAreaHa: area(totals?.totalAreaHa ?? 0),
       nativeVegetationAreaHa: area(totals?.nativeVegetationAreaHa ?? 0),
       totalSprings: number(totals?.totalSprings ?? 0),
-      totalImplementations: modalities.reduce(
-        (total, modality) => total + modality.totalImplementations,
-        0,
-      ),
+      // caixa de abelha conta colmeia, nao hectare: vai contada a parte
+      totalImplementations: implantacoes.areaImplementations,
+      beehiveInstallations: implantacoes.beehiveInstallations,
     },
     modalities,
   });
