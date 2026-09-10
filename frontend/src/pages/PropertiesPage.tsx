@@ -1,5 +1,5 @@
 import { MapPin } from '../icons';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import ApiErrorBanner from '../components/ApiErrorBanner';
 import DataTableCard, { type Column } from '../components/DataTableCard';
 import type { PageParams, PropertiesResponse, Property } from '../types';
@@ -51,16 +51,18 @@ const COLUMNS: Column<Property>[] = [
       const car = carOf(property)?.trim();
       if (!car) return 'Não informado';
 
-      // sem link próprio: o clique sobe pra linha, que leva ao mapa focado nesta
-      // propriedade (ver onRowClick). O ícone de pino sinaliza "ver no mapa".
+      // Link de verdade (vira <a href>), não um handler na linha: só o código do
+      // CAR fica clicável, e o browser cuida sozinho de abrir em nova guia no
+      // clique do meio ou com ctrl/cmd - sem sair da guia atual.
       return (
-        <span
+        <Link
+          to={`/mapa?car=${encodeURIComponent(car)}`}
           title="Ver no mapa"
-          className="inline-flex max-w-full items-center gap-1.5 font-semibold text-brand underline decoration-accent/60 underline-offset-2"
+          className="inline-flex max-w-full cursor-pointer items-center gap-1.5 font-semibold text-brand underline decoration-accent/60 underline-offset-2 hover:text-brand-deep hover:decoration-accent"
         >
           <MapPin size={13} className="shrink-0 text-accent" aria-hidden="true" />
           <span className="truncate">{car}</span>
-        </span>
+        </Link>
       );
     },
   },
@@ -72,7 +74,6 @@ const COLUMNS: Column<Property>[] = [
 ];
 
 export default function PropertiesPage() {
-  const navigate = useNavigate();
   const list = usePaginatedList<PropertiesResponse, Property, PageParams>(
     useGetPropertiesQuery,
     (params) => params,
@@ -83,13 +84,6 @@ export default function PropertiesPage() {
     }),
     PAGE_SIZES[0],
   );
-
-  // clicar numa propriedade abre o mapa já focado no CAR dela; sem CAR, vai pro
-  // mapa geral (não há geometria pra localizar)
-  function openOnMap(property: Property) {
-    const car = carOf(property);
-    navigate(car ? `/mapa?car=${encodeURIComponent(car)}` : '/mapa');
-  }
 
   return (
     <>
@@ -103,7 +97,6 @@ export default function PropertiesPage() {
         columns={COLUMNS}
         rowKey={(property) => property.id}
         pageSizes={PAGE_SIZES}
-        onRowClick={openOnMap}
       />
     </>
   );
