@@ -152,16 +152,20 @@ export default function PropertyDataCard({ car }: { car: string | null }) {
 
         <Field label="Bacia hidrográfica">{property?.watershed || 'Não informado'}</Field>
 
-        {/* duas áreas, duas fontes, dois rótulos. Antes elas caíam num campo só
-            com `??`, e o SICAR ganhava sempre: o PA Paraíso mostrava os 455 ha
-            do assentamento inteiro no lugar dos 10 ha do lote da produtora. */}
-        <Field label="Área no SICAR" divider>
-          {formatSicarNumber(sicar?.num_area ?? null, 'ha')}
+        {/* uma área só na tela: quando o cadastro do programa e o SICAR
+            concordam - o caso normal - repetir o mesmo número em dois campos é
+            ruído. A área do SICAR só aparece quando tem algo a dizer: ou porque
+            diverge (aí vem com o aviso abaixo), ou porque é a única que existe,
+            num CAR sem propriedade vinculada. */}
+        <Field label="Área total da propriedade" divider>
+          {formatSicarNumber(property?.totalAreaHa ?? sicar?.num_area ?? null, 'ha')}
         </Field>
 
-        <Field label="Área total da propriedade">
-          {formatSicarNumber(property?.totalAreaHa ?? null, 'ha')}
-        </Field>
+        {divergencia && (
+          <Field label="Área no SICAR">
+            {formatSicarNumber(sicar?.num_area ?? null, 'ha')}
+          </Field>
+        )}
 
         {divergencia && (
           <p className="flex items-start gap-2 rounded-lg bg-warn-bg px-3 py-2 text-[11.5px] text-warn @md:col-span-2 @3xl:col-span-3">
@@ -189,8 +193,6 @@ export default function PropertyDataCard({ car }: { car: string | null }) {
             {sicarStatusLabel(sicar?.ind_status)}
           </span>
         </Field>
-
-        <Field label="Situação">{sicar?.des_condic || 'Não informado'}</Field>
 
         {/* o que o ARVO não mostra: as modalidades implantadas na propriedade */}
         <Field label="Modalidade" divider>
