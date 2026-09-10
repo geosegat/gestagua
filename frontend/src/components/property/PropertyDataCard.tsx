@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { LandPlot, Layers3, MapPin, Sprout } from '../../icons';
+import { AlertTriangle, LandPlot, Layers3, MapPin, Sprout } from '../../icons';
 import { getApiErrorMessage } from '../../lib/apiError';
 import { modalityPresentation } from '../../lib/modalities';
 import {
@@ -31,6 +31,34 @@ const TONE_BADGE: Record<SicarTone, string> = {
 };
 
 const LABEL = 'text-[10.5px] font-semibold uppercase tracking-[0.16em] text-ink-soft';
+
+/**
+ * Tolerância pra comparar a área do CAR com a área cadastrada no programa. O
+ * SICAR arredonda em 2 casas, então 8,938 ha no programa e 8,94 ha no SICAR são
+ * a MESMA área - alarme aí só geraria ruído. Exigimos as duas folgas juntas pra
+ * não acusar diferença de arredondamento em imóvel pequeno.
+ */
+const AREA_TOLERANCIA_HA = 0.05;
+const AREA_TOLERANCIA_REL = 0.01;
+
+/**
+ * As duas áreas contam histórias diferentes? Quando contam, quase sempre é CAR
+ * de imóvel coletivo (o assentamento inteiro no lugar do lote) ou código
+ * trocado - os dois casos que o relatório da proposta técnica apontou.
+ */
+function areasDivergem(
+  sicarHa: number | null | undefined,
+  programaHa: number | null | undefined,
+): boolean {
+  if (sicarHa == null || programaHa == null) return false;
+  if (!Number.isFinite(sicarHa) || !Number.isFinite(programaHa)) return false;
+
+  const diferenca = Math.abs(sicarHa - programaHa);
+  const maior = Math.max(Math.abs(sicarHa), Math.abs(programaHa));
+  if (maior === 0) return false;
+
+  return diferenca > AREA_TOLERANCIA_HA && diferenca / maior > AREA_TOLERANCIA_REL;
+}
 
 function Field({
   label,
@@ -105,6 +133,7 @@ export default function PropertyDataCard({ car }: { car: string | null }) {
       : municipality || state || 'Não informado';
 
   const statusTone = sicarStatusTone(sicar?.ind_status);
+  const divergencia = areasDivergem(sicar?.num_area, property?.totalAreaHa);
 
   return (
     <div className={`brand-scroll @container h-full overflow-y-auto p-5 ${CARD}`}>
@@ -123,11 +152,31 @@ export default function PropertyDataCard({ car }: { car: string | null }) {
 
         <Field label="Bacia hidrográfica">{property?.watershed || 'Não informado'}</Field>
 
-        <Field label="Área do imóvel" divider>
-          {formatSicarNumber(sicar?.num_area ?? property?.totalAreaHa ?? null, 'ha')}
+        {/* duas áreas, duas fontes, dois rótulos. Antes elas caíam num campo só
+            com `??`, e o SICAR ganhava sempre: o PA Paraíso mostrava os 455 ha
+            do assentamento inteiro no lugar dos 10 ha do lote da produtora. */}
+        <Field label="Área no SICAR" divider>
+          {formatSicarNumber(sicar?.num_area ?? null, 'ha')}
         </Field>
 
-        <Field label="Módulos fiscais">{formatSicarNumber(sicar?.mod_fiscal)}</Field>
+        <Field label="Área total da propriedade">
+          {formatSicarNumber(property?.totalAreaHa ?? null, 'ha')}
+        </Field>
+
+        {divergencia && (
+          <p className="flex items-start gap-2 rounded-lg bg-warn-bg px-3 py-2 text-[11.5px] text-warn @md:col-span-2 @3xl:col-span-3">
+            <AlertTriangle size={14} className="mt-px shrink-0" aria-hidden="true" />
+            <span>
+              As duas áreas não batem. Costuma ser CAR de imóvel coletivo
+              (assentamento) ou código trocado — vale conferir contra a proposta
+              técnica.
+            </span>
+          </p>
+        )}
+
+        <Field label="Módulos fiscais" divider>
+          {formatSicarNumber(sicar?.mod_fiscal)}
+        </Field>
 
         <Field label="Tipo" divider>
           <span className="font-medium text-accent">{sicarTipoLabel(sicar?.ind_tipo)}</span>
