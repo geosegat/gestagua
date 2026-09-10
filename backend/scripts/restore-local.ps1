@@ -42,7 +42,11 @@ if ($exists -ne "1") {
 }
 
 Write-Host "Restaurando dump em '$DbName'..."
-& $pgRestore -U $DbUser -h $DbHost -d $DbName --no-owner --clean --if-exists $DumpFile
+# --no-acl junto com --no-owner: o dump vem do Azure e carrega GRANTs para
+# roles de la (arvo_dump, azure_pg_admin) que nao existem numa maquina de dev.
+# Sem --no-acl o pg_restore aborta no primeiro GRANT, e --no-owner sozinho nao
+# resolve: ele ignora dono, nao permissao.
+& $pgRestore -U $DbUser -h $DbHost -d $DbName --no-owner --no-acl --clean --if-exists $DumpFile
 # pg_restore pode retornar codigo !=0 por avisos (owners/extensoes); nao tratamos como fatal
 Write-Host "`nTabelas restauradas:"
 & $psql -U $DbUser -h $DbHost -d $DbName -c "\dt"
