@@ -365,10 +365,6 @@ export default function ProjectInstallmentsPage() {
             do contrato e o segundo após a aprovação do relatório de monitoramento.
           </p>
         </div>
-        <p className="mt-3 text-[10.5px] leading-relaxed text-warn">
-          O cronograma abaixo reproduz os registros do espelho e ainda pode seguir a estrutura
-          anterior de cinco parcelas. Ele não confirma sozinho os dois pagamentos oficiais.
-        </p>
       </section>
 
       {data.views.length > 1 && (
