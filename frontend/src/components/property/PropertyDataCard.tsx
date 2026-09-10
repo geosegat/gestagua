@@ -60,6 +60,25 @@ function areasDivergem(
   return diferenca > AREA_TOLERANCIA_HA && diferenca / maior > AREA_TOLERANCIA_REL;
 }
 
+/**
+ * "…, o dobro do cadastro": dá escala à divergência sem obrigar o leitor a
+ * dividir de cabeça. Só entra quando a proporção diz alguma coisa - abaixo de
+ * 1,5× o número cru já basta, e um "1,2×" só polui a frase.
+ */
+function proporcao(
+  sicarHa: number | null | undefined,
+  programaHa: number | null | undefined,
+): string {
+  if (sicarHa == null || programaHa == null || programaHa <= 0) return '';
+
+  const vezes = sicarHa / programaHa;
+  if (!Number.isFinite(vezes) || vezes < 1.5) return '';
+  if (vezes < 2.5) return ', cerca do dobro do cadastro';
+
+  const arredondado = Math.round(vezes);
+  return `, cerca de ${arredondado}× o cadastro`;
+}
+
 function Field({
   label,
   children,
@@ -152,28 +171,21 @@ export default function PropertyDataCard({ car }: { car: string | null }) {
 
         <Field label="Bacia hidrográfica">{property?.watershed || 'Não informado'}</Field>
 
-        {/* uma área só na tela: quando o cadastro do programa e o SICAR
-            concordam - o caso normal - repetir o mesmo número em dois campos é
-            ruído. A área do SICAR só aparece quando tem algo a dizer: ou porque
-            diverge (aí vem com o aviso abaixo), ou porque é a única que existe,
-            num CAR sem propriedade vinculada. */}
+        {/* um campo de área, sempre. Dois campos lado a lado repetiam o mesmo
+            número no caso normal; quando divergem, o do SICAR vale como alerta,
+            não como dado do imóvel - então ele vive no aviso abaixo. */}
         <Field label="Área total da propriedade" divider>
           {formatSicarNumber(property?.totalAreaHa ?? sicar?.num_area ?? null, 'ha')}
         </Field>
 
         {divergencia && (
-          <Field label="Área no SICAR">
-            {formatSicarNumber(sicar?.num_area ?? null, 'ha')}
-          </Field>
-        )}
-
-        {divergencia && (
           <p className="flex items-start gap-2 rounded-lg bg-warn-bg px-3 py-2 text-[11.5px] text-warn @md:col-span-2 @3xl:col-span-3">
             <AlertTriangle size={14} className="mt-px shrink-0" aria-hidden="true" />
             <span>
-              As duas áreas não batem. Costuma ser CAR de imóvel coletivo
-              (assentamento) ou código trocado — vale conferir contra a proposta
-              técnica.
+              O CAR no SICAR tem {formatSicarNumber(sicar?.num_area, 'ha')}
+              {proporcao(sicar?.num_area, property?.totalAreaHa)}. Costuma ser CAR
+              de imóvel coletivo (assentamento) ou código trocado — vale conferir
+              contra a proposta técnica.
             </span>
           </p>
         )}
