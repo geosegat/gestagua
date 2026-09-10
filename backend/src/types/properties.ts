@@ -12,6 +12,7 @@ export interface PropertyRow extends QueryResultRow {
   propertyCode: string | null;
   ruralEnvironmentalRegistry: string | null;
   ruralEnvironmentalRegistryStatus: string | null;
+  watershed_name: string | null;
   total_projetos: number;
   city: string | null;
   state: string | null;
@@ -30,6 +31,8 @@ export interface Property {
   propertyCode: string | null;
   ruralEnvironmentalRegistry: string | null;
   ruralEnvironmentalRegistryStatus: string | null;
+  /** Bacia hidrografica da propriedade (properties.watershedId). */
+  watershed: string | null;
   totalProjects: number;
   location: {
     municipality: string | null;

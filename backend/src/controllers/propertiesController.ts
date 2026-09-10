@@ -25,6 +25,7 @@ function mapProperty(row: PropertyRow): Property {
     propertyCode: row.propertyCode,
     ruralEnvironmentalRegistry: row.ruralEnvironmentalRegistry,
     ruralEnvironmentalRegistryStatus: row.ruralEnvironmentalRegistryStatus,
+    watershed: row.watershed_name,
     totalProjects: row.total_projetos,
     location: {
       municipality: row.city,
@@ -79,6 +80,7 @@ export async function listar(
             pr."ruralEnvironmentalRegistry",
             pr."ruralEnvironmentalRegistryStatus",
             a.city, a.state, a.latitude, a.longitude,
+            w.name AS watershed_name,
             u.name AS producer,
             (
               SELECT count(*)::int
@@ -90,6 +92,7 @@ export async function listar(
             ) AS total_projetos
      FROM properties pr
      LEFT JOIN addresses a  ON a.id  = pr."addressId"
+     LEFT JOIN watersheds w ON w.id = pr."watershedId"
      LEFT JOIN producers pd ON pd.id = pr."producerId"
      LEFT JOIN users u      ON u.id  = pd."userId"
      ${where}
@@ -149,6 +152,7 @@ export async function porCar(
             pr."ruralEnvironmentalRegistry",
             pr."ruralEnvironmentalRegistryStatus",
             a.city, a.state, a.latitude, a.longitude,
+            w.name AS watershed_name,
             u.name AS producer,
             (
               SELECT count(*)::int
@@ -160,6 +164,7 @@ export async function porCar(
             ) AS total_projetos
      FROM properties pr
      LEFT JOIN addresses a  ON a.id  = pr."addressId"
+     LEFT JOIN watersheds w ON w.id = pr."watershedId"
      LEFT JOIN producers pd ON pd.id = pr."producerId"
      LEFT JOIN users u      ON u.id  = pd."userId"
      WHERE pr."deletedAt" IS NULL

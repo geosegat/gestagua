@@ -414,6 +414,8 @@ export interface Property {
   propertyCode: string | null;
   ruralEnvironmentalRegistry: string | null;
   ruralEnvironmentalRegistryStatus: string | null;
+  /** Bacia hidrográfica da propriedade, do cadastro do ARVO. */
+  watershed: string | null;
   totalProjects: number;
   location: {
     municipality: string | null;
