@@ -234,11 +234,6 @@ export default function OverviewIndicators({ data }: { data: IndicatorsResponse 
               {formatCurrency(payments.recordedPaidAmount)}
             </span>
           </div>
-
-          <p className="mt-4 text-[10.5px] leading-relaxed text-warn">
-            O banco ainda guarda um cronograma anterior com até cinco parcelas. Estes registros
-            não representam, sozinhos, os dois repasses oficiais da edição 2026.
-          </p>
         </motion.section>
 
         <motion.section
