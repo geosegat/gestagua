@@ -121,6 +121,8 @@ export default function PropertyDataCard({ car }: { car: string | null }) {
 
         <Field label="Município / Estado">{place}</Field>
 
+        <Field label="Bacia hidrográfica">{property?.watershed || 'Não informado'}</Field>
+
         <Field label="Área do imóvel" divider>
           {formatSicarNumber(sicar?.num_area ?? property?.totalAreaHa ?? null, 'ha')}
         </Field>
