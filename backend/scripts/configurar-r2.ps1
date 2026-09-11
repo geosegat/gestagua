@@ -4,8 +4,13 @@
 
 .DESCRIPTION
   O token do R2 e mostrado uma unica vez pelo Cloudflare. Este script le os
-  dois segredos como SecureString (nao ecoa, nao vai para o historico do
-  shell) e atualiza o .env preservando o resto do arquivo.
+  dois segredos pela area de transferencia e atualiza o .env preservando o
+  resto do arquivo.
+
+  Por que clipboard e nao Read-Host -AsSecureString: em varios consoles do
+  Windows o -AsSecureString ignora o Ctrl+V e registra um caractere so, e o
+  erro passa despercebido porque a digitacao fica oculta. Colar no clipboard
+  e ler dali e confiavel, e continua sem exibir nada.
 
   Uso:
     cd backend
@@ -34,26 +39,49 @@ Write-Host ''
 $bucket = Read-Host 'Nome do bucket (enter = gestagua-propostas)'
 if ([string]::IsNullOrWhiteSpace($bucket)) { $bucket = 'gestagua-propostas' }
 
-Write-Host ''
-Write-Host 'Cole os valores do token (R2 > Manage API Tokens).' -ForegroundColor Yellow
-Write-Host 'A digitacao fica oculta.' -ForegroundColor Yellow
+<#
+  Le um valor pela area de transferencia. Nao imprime o conteudo: so o
+  tamanho, para dar para conferir que o paste veio inteiro.
+#>
+function Read-FromClipboard {
+  param(
+    [string] $Rotulo,
+    [int] $TamanhoEsperado
+  )
 
-$accessKeySecure = Read-Host 'Access Key ID' -AsSecureString
-$secretKeySecure = Read-Host 'Secret Access Key' -AsSecureString
+  while ($true) {
+    Write-Host ''
+    Write-Host "Copie o $Rotulo (Ctrl+C no dashboard) e aperte Enter aqui." -ForegroundColor Yellow
+    Read-Host ' pronto? (Enter)' | Out-Null
 
-function ConvertFrom-Secure([System.Security.SecureString] $s) {
-  $ptr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($s)
-  try { [Runtime.InteropServices.Marshal]::PtrToStringBSTR($ptr) }
-  finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($ptr) }
+    $valor = (Get-Clipboard -Raw)
+    if ($null -ne $valor) { $valor = $valor.Trim() }
+
+    if ([string]::IsNullOrWhiteSpace($valor)) {
+      Write-Host '  area de transferencia vazia - copie o valor e tente de novo' -ForegroundColor Red
+      continue
+    }
+
+    if ($valor -match '\s') {
+      Write-Host '  o valor copiado tem espaco ou quebra de linha - copie so a chave' -ForegroundColor Red
+      continue
+    }
+
+    Write-Host "  recebido: $($valor.Length) caracteres" -ForegroundColor Green
+
+    if ($valor.Length -ne $TamanhoEsperado) {
+      Write-Host "  ATENCAO: o esperado para $Rotulo sao $TamanhoEsperado caracteres." -ForegroundColor Red
+      $resposta = Read-Host '  usar assim mesmo? (s/N)'
+      if ($resposta -notmatch '^[sS]') { continue }
+    }
+
+    return $valor
+  }
 }
 
-$accessKey = ConvertFrom-Secure $accessKeySecure
-$secretKey = ConvertFrom-Secure $secretKeySecure
-
-if ([string]::IsNullOrWhiteSpace($accessKey) -or [string]::IsNullOrWhiteSpace($secretKey)) {
-  Write-Error 'access key e secret key sao obrigatorios'
-  exit 1
-}
+# Formato do R2: Access Key ID com 32 hex, Secret com 64 hex.
+$accessKey = Read-FromClipboard -Rotulo 'Access Key ID' -TamanhoEsperado 32
+$secretKey = Read-FromClipboard -Rotulo 'Secret Access Key' -TamanhoEsperado 64
 
 $valores = [ordered]@{
   R2_ENDPOINT          = $endpoint
@@ -77,9 +105,12 @@ foreach ($chave in $valores.Keys) {
 
 Set-Content -LiteralPath $envPath -Value $linhas -Encoding UTF8
 
+# Limpa a area de transferencia para o segredo nao ficar rondando.
+try { Set-Clipboard -Value '' } catch { }
+
 Write-Host ''
 Write-Host "ok: 5 variaveis gravadas em $envPath" -ForegroundColor Green
-Write-Host '  (os segredos nao foram exibidos nem registrados)'
+Write-Host '  (os segredos nao foram exibidos; area de transferencia limpa)'
 Write-Host ''
 Write-Host 'Proximo passo:' -ForegroundColor Cyan
 Write-Host '  node scripts/upload-propostas-r2.js          # simula'
