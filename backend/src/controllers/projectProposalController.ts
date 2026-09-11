@@ -94,7 +94,8 @@ export async function detalhe(req: Request<IdParams>, res: Response) {
     return res.json(vazio);
   }
 
-  const opened = await getDocumentStorage().open({
+  // head, não open: montar a aba não deve transferir o PDF inteiro do bucket
+  const found = await getDocumentStorage().head({
     projectId: req.params.id,
     filePath: row.filePath,
   });
@@ -104,8 +105,8 @@ export async function detalhe(req: Request<IdParams>, res: Response) {
     fileName: resolveFileName(row),
     mimeType: row.mimeType,
     // o tamanho do storage é a verdade; o do banco pode estar defasado
-    fileSizeBytes: opened?.sizeBytes ?? row.fileSize,
-    downloadable: opened !== null,
+    fileSizeBytes: found?.sizeBytes ?? row.fileSize,
+    downloadable: found !== null,
   };
 
   return res.json(resumo);
@@ -133,9 +134,14 @@ export async function baixar(req: Request<IdParams>, res: Response) {
 
   res.setHeader('Content-Type', row.mimeType || 'application/pdf');
   res.setHeader('Content-Disposition', contentDisposition(resolveFileName(row)));
-  res.setHeader('Content-Length', String(opened.sizeBytes));
+  if (opened.sizeBytes > 0) res.setHeader('Content-Length', String(opened.sizeBytes));
   // documento com dado pessoal: não pode ficar em cache compartilhado
   res.setHeader('Cache-Control', 'private, no-store');
 
-  return res.sendFile(opened.absolutePath);
+  // um erro no meio do stream chega tarde demais para virar status: aborta a
+  // resposta em vez de entregar um PDF truncado como se estivesse completo
+  opened.stream.on('error', () => res.destroy());
+  res.on('close', () => opened.stream.destroy());
+
+  return opened.stream.pipe(res);
 }

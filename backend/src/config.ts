@@ -48,11 +48,20 @@ const config: AppConfig = {
   pointerFile: envPath('POINTER_FILE', 'banco_ativo.txt'),
   logFile: envPath('LOG_FILE', 'api.log'),
   syncStateFile: envPath('SYNC_STATE_FILE', 'sync-state.json'),
-  // sem default: não configurado = download desabilitado, e não um caminho
-  // inventado que existiria por acidente
-  proposalsDir: process.env.PROPOSALS_DIR?.trim()
-    ? path.resolve(process.cwd(), process.env.PROPOSALS_DIR.trim())
-    : '',
+  proposals: {
+    // sem default: não configurado = download desabilitado, e não um caminho
+    // inventado que existiria por acidente
+    proposalsDir: process.env.PROPOSALS_DIR?.trim()
+      ? path.resolve(process.cwd(), process.env.PROPOSALS_DIR.trim())
+      : '',
+    r2: {
+      endpoint: envStr('R2_ENDPOINT', ''),
+      bucket: envStr('R2_BUCKET', ''),
+      prefix: envStr('R2_PREFIX', 'propostas').replace(/^\/+|\/+$/g, ''),
+      accessKeyId: envStr('R2_ACCESS_KEY_ID', ''),
+      secretAccessKey: envStr('R2_SECRET_ACCESS_KEY', ''),
+    },
+  },
   db: {
     connectionString: envStr('DATABASE_URL', ''),
     host: envStr('DB_HOST', 'localhost'),

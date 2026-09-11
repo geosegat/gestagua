@@ -44,6 +44,21 @@ export interface DatabaseConfig {
   password: string;
 }
 
+/** Bucket S3-compatible das propostas. Vazio = adapter de R2 desligado. */
+export interface R2Config {
+  endpoint: string;
+  bucket: string;
+  prefix: string;
+  accessKeyId: string;
+  secretAccessKey: string;
+}
+
+export interface ProposalsConfig {
+  /** Diretório local dos PDFs; usado só quando o R2 não está configurado. */
+  proposalsDir: string;
+  r2: R2Config;
+}
+
 export interface AppConfig {
   port: number;
   apiKey: string;
@@ -52,8 +67,7 @@ export interface AppConfig {
   pointerFile: string;
   logFile: string;
   syncStateFile: string;
-  /** Diretório dos PDFs de proposta técnica; vazio desabilita o download. */
-  proposalsDir: string;
+  proposals: ProposalsConfig;
   db: DatabaseConfig;
 }
 
