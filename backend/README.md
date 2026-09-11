@@ -97,6 +97,53 @@ também devolve `filters.availableYears`.
 - carbono devolve o catálogo e sua cobertura, mas mantém
   `totalStoredCarbon: null` até a definição da regra de cálculo e unidade.
 
+## Proposta técnica assinada (aba do projeto)
+
+O PDF **não** é um arquivo solto: ele chega pelo MV Gest como o documento da
+atividade de upload chamada `Projeto técnico`. A rota resolve o vínculo pela
+cadeia dura, nunca por nome de produtor — os nomes divergem entre as fontes
+("Renan Batista" no banco × "Renan Baptista" no arquivo, "Laura Eleoterio" ×
+"Eleotero"), e casar por nome entregaria a proposta de um produtor a outro:
+
+```text
+projects → activities (name='Projeto técnico', type='upload') → documents
+```
+
+Parte dos uploads chegou com nome curto do DOS (`PROPOS~2.PDF`); o controller
+detecta o padrão `~N.EXT` e remonta o nome a partir do produtor. Corrigir na
+origem é no MV Gest — enquanto não for, o sync traz de volta a cada rodada.
+
+**Quem serve os bytes** fica isolado em `services/documentStorage.ts`, porque o
+sync carrega o Postgres e **não** os blobs. Precedência:
+
+| Adapter | Quando | Chave do objeto |
+| --- | --- | --- |
+| `r2` | as 4 variáveis `R2_*` definidas | `propostas/<projectId>.pdf` |
+| `local` | só `PROPOSALS_DIR` | `<PROPOSALS_DIR>/<projectId>.pdf` |
+| `none` | nenhuma | — (aba avisa "indisponível") |
+
+Em produção é obrigatório o `r2`: a API roda no Railway, cujo disco é efêmero,
+e os PDFs não vão no repositório (`storage/` está no `.gitignore`, são contrato
+com dado pessoal).
+
+O bucket é **privado**. A API lê o objeto e repassa os bytes, em vez de emitir
+presigned URL — assim o controle de acesso continua sendo o `x-api-key` e não
+circula URL assinada em log, histórico ou print. Não habilite domínio público
+no bucket.
+
+Popular, na ordem:
+
+```powershell
+node scripts/seed-propostas.js <pasta-com-os-pdfs>   # simula o casamento
+node scripts/seed-propostas.js <pasta> --apply       # copia p/ PROPOSALS_DIR
+node scripts/upload-propostas-r2.js                  # simula o envio
+node scripts/upload-propostas-r2.js --apply          # envia ao bucket
+.\scripts\configurar-r2.ps1                          # grava credenciais no .env
+```
+
+O `seed` casa por nome exato de `documents.name` e, no que sobra, por tamanho
+único — nunca por semelhança de nome. Os dois scripts simulam por padrão.
+
 ## Sincronização Azure → Railway (botão "Atualizar dados")
 
 A API **não** executa dump nem restore: ela só guarda a intenção e o progresso.
@@ -144,8 +191,24 @@ no final.
 
 ## ⚠️ Dados pessoais (LGPD) - leia antes de expor coisa nova
 
-Esta API foi prometida à prefeitura como **sem dados pessoais** (o rodapé do
-demo diz isso). A tabela `producers` tem CPF, RG, telefones, nascimento…
+As rotas de **listagem** desta API não expõem dados pessoais. A tabela
+`producers` tem CPF, RG, telefones, nascimento…
+
+**Exceção, decidida pelo time:** a proposta técnica assinada
+(`/projetos/:id/proposta-tecnica/arquivo`) entrega o PDF anexado no MV Gest, e
+esse PDF **contém dados pessoais do produtor** — CPF, RG, e-mail, CAR,
+assinatura e, em parte dos casos, foto de documento. Verificado nos 20
+arquivos da 4ª edição: os cinco primeiros aparecem em 20/20.
+
+A chave da prefeitura abre essa rota. Isso é intencional: quem usa o painel lá
+precisa visualizar e baixar as propostas (pedido do Marcelo, confirmado em
+11/09/2026). Quem mexer aqui depois: **não é descuido, é requisito.**
+
+Se um dia a decisão mudar, o mecanismo já existe e está testado — basta definir
+`API_KEY_INTERNAL` no ambiente. Com ela, as rotas de proposta passam a exigir
+essa chave e a da prefeitura toma 403; sem ela, ambas as chaves abrem tudo
+(ver `middlewares/requireInternalKey.ts`). O servidor avisa no boot enquanto a
+variável não estiver definida.
 
 - Na listagem de produtores, exponha o **mínimo**: nome (`users.name` via
   `producers."userId"`), comunidade, ocupação, contagem de propriedades.
