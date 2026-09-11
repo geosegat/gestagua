@@ -52,6 +52,8 @@ export interface AppConfig {
   pointerFile: string;
   logFile: string;
   syncStateFile: string;
+  /** Diretório dos PDFs de proposta técnica; vazio desabilita o download. */
+  proposalsDir: string;
   db: DatabaseConfig;
 }
 

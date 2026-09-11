@@ -15,6 +15,7 @@ import type {
   ProjectDetail,
   ProjectInstallmentsResponse,
   ProjectModalitiesResponse,
+  ProjectProposalResponse,
   ProjectsResponse,
   ProjectStageActivitiesResponse,
   ProjectStagesResponse,
@@ -122,6 +123,10 @@ export const gestaguaApi = createApi({
       query: (id) => `/projetos/${id}/parcelas-produtor`,
       providesTags: (_result, _error, id) => [{ type: 'Project', id }],
     }),
+    getProjectProposal: builder.query<ProjectProposalResponse, string>({
+      query: (id) => `/projetos/${id}/proposta-tecnica`,
+      providesTags: (_result, _error, id) => [{ type: 'Project', id }],
+    }),
     getProjectStages: builder.query<ProjectStagesResponse, string>({
       query: (id) => `/projetos/${id}/etapas`,
       providesTags: (_result, _error, id) => [{ type: 'Project', id }],
@@ -192,6 +197,7 @@ export const {
   useGetProjectQuery,
   useGetProjectInstallmentsQuery,
   useGetProjectModalitiesQuery,
+  useGetProjectProposalQuery,
   useGetProjectStagesQuery,
   useGetProjectStageActivitiesQuery,
   useGetProducersQuery,

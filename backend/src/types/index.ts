@@ -7,6 +7,7 @@ export * from './modalities';
 export * from './producers';
 export * from './programs';
 export * from './projects';
+export * from './proposals';
 export * from './publicPortal';
 export * from './properties';
 export * from './stages';

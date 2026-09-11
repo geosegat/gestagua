@@ -4,7 +4,7 @@ import { getApiErrorMessage } from '../../lib/apiError';
 import { useGetProjectQuery } from '../../services/gestaguaApi';
 import type { ProjectRouteContext } from '../../types';
 import ApiErrorBanner from '../ApiErrorBanner';
-import ProjectInternalHeader from './ProjectInternalHeader';
+import ProjectInternalHeader, { activeTabForPath } from './ProjectInternalHeader';
 
 function ProjectLoading() {
   return (
@@ -50,11 +50,7 @@ export default function ProjectLayout() {
     );
   }
 
-  const activeTab = location.pathname.endsWith('/atividades')
-    ? 'activities'
-    : location.pathname.endsWith('/parcelas-produtor')
-      ? 'installments'
-      : 'project';
+  const activeTab = activeTabForPath(location.pathname);
   const context: ProjectRouteContext = { project: projectQuery.data };
 
   return (

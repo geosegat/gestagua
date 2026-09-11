@@ -48,6 +48,11 @@ const config: AppConfig = {
   pointerFile: envPath('POINTER_FILE', 'banco_ativo.txt'),
   logFile: envPath('LOG_FILE', 'api.log'),
   syncStateFile: envPath('SYNC_STATE_FILE', 'sync-state.json'),
+  // sem default: não configurado = download desabilitado, e não um caminho
+  // inventado que existiria por acidente
+  proposalsDir: process.env.PROPOSALS_DIR?.trim()
+    ? path.resolve(process.cwd(), process.env.PROPOSALS_DIR.trim())
+    : '',
   db: {
     connectionString: envStr('DATABASE_URL', ''),
     host: envStr('DB_HOST', 'localhost'),

@@ -12,6 +12,10 @@ banco_ativo.txt
 sync-state.json
 *.log
 
+# Propostas assinadas: contrato de produtor com dado pessoal, nunca versionar
+storage/
+
+
 # Builds
 dist/
 **/dist/

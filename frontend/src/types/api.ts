@@ -296,6 +296,19 @@ export interface ProjectInstallmentsResponse {
   views: ProducerInstallmentView[];
 }
 
+/**
+ * Proposta técnica assinada do projeto. `available` diz se ela existe no
+ * sistema; `downloadable` diz se este ambiente alcança o arquivo — os dois
+ * são distintos porque o espelho traz o metadado sem trazer o blob.
+ */
+export interface ProjectProposalResponse {
+  available: boolean;
+  fileName: string | null;
+  mimeType: string | null;
+  fileSizeBytes: number | null;
+  downloadable: boolean;
+}
+
 export interface Pagination {
   page: number;
   perPage: number;

@@ -10,6 +10,7 @@ import * as parcelasProjeto from '../controllers/projectInstallmentsController';
 import * as etapasProjeto from '../controllers/projectStagesController';
 import * as programs from '../controllers/programsController';
 import * as projetos from '../controllers/projectsController';
+import * as propostaProjeto from '../controllers/projectProposalController';
 import * as produtores from '../controllers/producersController';
 import * as propriedades from '../controllers/propertiesController';
 import * as sync from '../controllers/syncController';
@@ -37,6 +38,11 @@ router.get('/indicadores', asyncHandler(indicadores.summary));
 router.get('/projetos', asyncHandler(projetos.listar));
 router.get('/projetos/:id/modalidades', asyncHandler(modalidadesProjeto.listar));
 router.get('/projetos/:id/parcelas-produtor', asyncHandler(parcelasProjeto.listar));
+router.get('/projetos/:id/proposta-tecnica', asyncHandler(propostaProjeto.detalhe));
+router.get(
+  '/projetos/:id/proposta-tecnica/arquivo',
+  asyncHandler(propostaProjeto.baixar),
+);
 router.get('/projetos/:id/etapas', asyncHandler(etapasProjeto.listarEtapas));
 router.get(
   '/projetos/:id/etapas/:stageId/atividades',

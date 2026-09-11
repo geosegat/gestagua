@@ -15,6 +15,7 @@ import ProgramsPage from './pages/ProgramsPage';
 import ProjectsPage from './pages/ProjectsPage';
 import ProjectInformationPage from './pages/ProjectInformationPage';
 import ProjectInstallmentsPage from './pages/ProjectInstallmentsPage';
+import ProjectProposalPage from './pages/ProjectProposalPage';
 import ProjectStagesPage from './pages/ProjectStagesPage';
 import PropertiesPage from './pages/PropertiesPage';
 // mapa carregado sob demanda: puxa o Google Maps só quem abre a tela
@@ -94,6 +95,7 @@ export default function App() {
               <Route path="informacoes" element={<ProjectInformationPage />} />
               <Route path="atividades" element={<ProjectStagesPage />} />
               <Route path="parcelas-produtor" element={<ProjectInstallmentsPage />} />
+              <Route path="proposta-tecnica" element={<ProjectProposalPage />} />
             </Route>
             {ALL_NAV_ITEMS.map((item) => (
               <Route
