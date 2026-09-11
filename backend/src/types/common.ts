@@ -62,6 +62,8 @@ export interface ProposalsConfig {
 export interface AppConfig {
   port: number;
   apiKey: string;
+  /** Chave do painel interno: exigida nas rotas que servem dado pessoal. */
+  internalApiKey: string;
   allowedOrigins: string[];
   gestaguaProgramId: string;
   pointerFile: string;

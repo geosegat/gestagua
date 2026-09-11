@@ -6,6 +6,7 @@ import path from 'node:path';
 import config from './config';
 import { log } from './log';
 import { errorHandler } from './middlewares/errorHandler';
+import { warnIfInternalKeyMissing } from './middlewares/requireInternalKey';
 import routes from './routes';
 
 const app = express();
@@ -48,6 +49,7 @@ app.use(errorHandler);
 
 app.listen(config.port, () => {
   log(`API Gestagua escutando na porta ${config.port}`);
+  warnIfInternalKeyMissing();
   log(
     temFrontend
       ? 'Frontend: servindo ./public'

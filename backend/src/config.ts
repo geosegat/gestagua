@@ -41,6 +41,7 @@ const frontendOrigins = [
 const config: AppConfig = {
   port: envInt('PORT', 8080),
   apiKey: envStr('API_KEY', ''),
+  internalApiKey: envStr('API_KEY_INTERNAL', ''),
   allowedOrigins: Array.from(
     new Set([...frontendOrigins, ...envList('ALLOWED_ORIGINS', [])]),
   ),

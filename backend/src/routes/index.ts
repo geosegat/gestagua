@@ -16,6 +16,7 @@ import * as propriedades from '../controllers/propertiesController';
 import * as sync from '../controllers/syncController';
 import { asyncHandler } from '../middlewares/asyncHandler';
 import auth from '../middlewares/auth';
+import requireInternalKey from '../middlewares/requireInternalKey';
 
 const router = Router();
 
@@ -38,9 +39,16 @@ router.get('/indicadores', asyncHandler(indicadores.summary));
 router.get('/projetos', asyncHandler(projetos.listar));
 router.get('/projetos/:id/modalidades', asyncHandler(modalidadesProjeto.listar));
 router.get('/projetos/:id/parcelas-produtor', asyncHandler(parcelasProjeto.listar));
-router.get('/projetos/:id/proposta-tecnica', asyncHandler(propostaProjeto.detalhe));
+// PDF com CPF, RG e assinatura do produtor: exige a chave interna quando ela
+// estiver configurada, para não sair pela chave entregue à prefeitura
+router.get(
+  '/projetos/:id/proposta-tecnica',
+  requireInternalKey,
+  asyncHandler(propostaProjeto.detalhe),
+);
 router.get(
   '/projetos/:id/proposta-tecnica/arquivo',
+  requireInternalKey,
   asyncHandler(propostaProjeto.baixar),
 );
 router.get('/projetos/:id/etapas', asyncHandler(etapasProjeto.listarEtapas));
