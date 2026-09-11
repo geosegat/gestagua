@@ -13,7 +13,16 @@ const TABS = [
   { key: 'project', label: 'Projeto', path: 'informacoes' },
   { key: 'activities', label: 'Etapas e atividades', path: 'atividades' },
   { key: 'installments', label: 'Parcelas do produtor', path: 'parcelas-produtor' },
+  { key: 'proposal', label: 'Proposta Técnica', path: 'proposta-tecnica' },
 ] as const;
+
+export type ProjectTabKey = (typeof TABS)[number]['key'];
+
+/** Resolve a aba pela URL; 'project' é o padrão, como a rota index. */
+export function activeTabForPath(pathname: string): ProjectTabKey {
+  const tab = TABS.find((item) => pathname.endsWith(`/${item.path}`));
+  return tab?.key ?? 'project';
+}
 
 function valueOrDash(value: string | null | undefined): string {
   return value?.trim() || 'Não informado';
@@ -24,7 +33,7 @@ export default function ProjectInternalHeader({
   activeTab,
 }: {
   project: ProjectDetail;
-  activeTab: (typeof TABS)[number]['key'];
+  activeTab: ProjectTabKey;
 }) {
   const navigate = useNavigate();
   const locationLabel = [...new Set([project.location.municipality, project.location.state].filter(Boolean))].join(' · ');
