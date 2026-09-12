@@ -28,6 +28,7 @@ import {
 } from '@aws-sdk/client-s3';
 
 import config from '../config';
+import { log } from '../log';
 
 export interface StorageRef {
   /** Chave dos adapters que organizam por projeto (local, r2). */
@@ -49,6 +50,8 @@ export interface DocumentStorage {
   readonly kind: string;
   /** Descreve o destino para diagnóstico, sem vazar credencial. */
   readonly describe: string;
+  /** Nome do erro da última falha, quando o adapter souber informar. */
+  readonly lastError?: string | null;
   /** Só confere existência e tamanho — não transfere o corpo. */
   head(ref: StorageRef): Promise<DocumentHead | null>;
   open(ref: StorageRef): Promise<OpenedDocument | null>;
@@ -136,15 +139,42 @@ class S3DocumentStorage implements DocumentStorage {
     return this.prefix ? `${this.prefix}/${name}` : name;
   }
 
+  /**
+   * Guarda por que a última chamada falhou. Sem isso, "indisponível" cobre
+   * credencial errada, bucket errado e objeto ausente com a mesma mensagem, e
+   * diagnosticar em produção vira adivinhação.
+   */
+  private ultimoErro: string | null = null;
+
+  get lastError(): string | null {
+    return this.ultimoErro;
+  }
+
+  /**
+   * Registra nome + status HTTP. O status importa porque HeadObject é um HTTP
+   * HEAD, sem corpo: o SDK não consegue parsear o código do erro e devolve
+   * "Unknown". Já o status separa os casos que interessam — 401/403 é
+   * credencial ou permissão, 404 é objeto ausente.
+   */
+  private registrar(operacao: string, erro: unknown): null {
+    const nome = erro instanceof Error ? erro.name : 'ErroDesconhecido';
+    const status = (erro as { $metadata?: { httpStatusCode?: number } })?.$metadata
+      ?.httpStatusCode;
+
+    this.ultimoErro = status ? `${nome} (HTTP ${status})` : nome;
+    log(`R2 ${operacao} falhou em ${this.bucket}: ${this.ultimoErro}`);
+    return null;
+  }
+
   async head(ref: StorageRef): Promise<DocumentHead | null> {
     try {
       const result = await this.client.send(
         new HeadObjectCommand({ Bucket: this.bucket, Key: this.keyFor(ref) }),
       );
+      this.ultimoErro = null;
       return { sizeBytes: result.ContentLength ?? 0 };
-    } catch {
-      // objeto ausente ou credencial sem acesso: nos dois casos não há download
-      return null;
+    } catch (erro) {
+      return this.registrar('HeadObject', erro);
     }
   }
 
@@ -153,14 +183,15 @@ class S3DocumentStorage implements DocumentStorage {
       const result = await this.client.send(
         new GetObjectCommand({ Bucket: this.bucket, Key: this.keyFor(ref) }),
       );
-      if (!result.Body) return null;
+      if (!result.Body) return this.registrar('GetObject', new Error('SemCorpo'));
 
+      this.ultimoErro = null;
       return {
         stream: result.Body as Readable,
         sizeBytes: result.ContentLength ?? 0,
       };
-    } catch {
-      return null;
+    } catch (erro) {
+      return this.registrar('GetObject', erro);
     }
   }
 }
