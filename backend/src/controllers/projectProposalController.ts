@@ -126,9 +126,13 @@ export async function baixar(req: Request<IdParams>, res: Response) {
   });
 
   if (!opened) {
+    const storage = getDocumentStorage();
     return res.status(503).json({
       erro: 'proposta registrada no sistema, mas indisponível para download neste ambiente',
-      storage: getDocumentStorage().kind,
+      storage: storage.kind,
+      // só o nome do erro (InvalidAccessKeyId, AccessDenied, NoSuchKey…): sem
+      // isso, credencial errada e objeto ausente são indistinguíveis daqui
+      motivo: storage.lastError ?? null,
     });
   }
 
