@@ -1,5 +1,5 @@
-import { Download, FileText, Info, LoaderCircle } from '../icons';
-import { useState } from 'react';
+import { Download, Eye, EyeOff, FileText, Info, LoaderCircle } from '../icons';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import ApiErrorBanner from '../components/ApiErrorBanner';
 import { getApiErrorMessage } from '../lib/apiError';
@@ -19,10 +19,11 @@ function PageLoading() {
 }
 
 /**
- * O arquivo é servido por rota autenticada por `x-api-key`, e um `<a href>`
- * não carrega header — então baixa via fetch e entrega o blob ao navegador.
+ * O arquivo é servido por rota autenticada por `x-api-key`, e nem `<a href>`
+ * nem `<iframe src>` carregam header — então baixar e visualizar passam pelo
+ * mesmo fetch, e o que muda é só o destino do blob.
  */
-async function downloadProposal(projectId: string, fileName: string) {
+async function fetchProposalBlob(projectId: string): Promise<Blob> {
   const baseUrl = import.meta.env.VITE_API_URL ?? '';
   const response = await fetch(
     `${baseUrl}/projetos/${projectId}/proposta-tecnica/arquivo`,
@@ -31,11 +32,14 @@ async function downloadProposal(projectId: string, fileName: string) {
 
   if (!response.ok) {
     const detail = await response.json().catch(() => null);
-    throw new Error(detail?.erro ?? `falha ao baixar (HTTP ${response.status})`);
+    throw new Error(detail?.erro ?? `falha ao obter o arquivo (HTTP ${response.status})`);
   }
 
-  const blob = await response.blob();
-  const url = URL.createObjectURL(blob);
+  return response.blob();
+}
+
+async function downloadProposal(projectId: string, fileName: string) {
+  const url = URL.createObjectURL(await fetchProposalBlob(projectId));
   const anchor = document.createElement('a');
   anchor.href = url;
   anchor.download = fileName;
@@ -66,6 +70,16 @@ export default function ProjectProposalPage() {
   const query = useGetProjectProposalQuery(projectId ?? '', { skip: !projectId });
   const [downloading, setDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [loadingPreview, setLoadingPreview] = useState(false);
+
+  // o blob fica na memória do navegador até ser revogado; sair da aba sem
+  // revogar vaza o PDF inteiro
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
 
   if (query.isLoading) return <PageLoading />;
 
@@ -104,9 +118,34 @@ export default function ProjectProposalPage() {
     }
   }
 
+  async function handlePreview() {
+    if (!projectId) return;
+
+    // já aberto: fecha e devolve a memória
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(null);
+      return;
+    }
+
+    setLoadingPreview(true);
+    setDownloadError(null);
+    try {
+      const blob = await fetchProposalBlob(projectId);
+      setPreviewUrl(URL.createObjectURL(blob));
+    } catch (error) {
+      setDownloadError(error instanceof Error ? error.message : 'falha ao abrir o arquivo');
+    } finally {
+      setLoadingPreview(false);
+    }
+  }
+
   return (
     <div className="space-y-5">
-      <section className="relative overflow-hidden rounded-[16px] border border-line bg-card">
+      {/* overflow-clip, não overflow-hidden: o símbolo decorativo extravasa 80px
+          à direita, e "hidden" esconde mas deixa o card rolável — ao focar um
+          botão o navegador rolava o card e o conteúdo saía do lugar */}
+      <section className="relative overflow-clip rounded-[16px] border border-line bg-card">
         <img
           src="/arvo-symbol-green.png"
           alt=""
@@ -140,26 +179,70 @@ export default function ProjectProposalPage() {
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={() => void handleDownload()}
-            disabled={!proposal.downloadable || downloading}
-            className="inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-[10px] bg-brand px-5 py-3 text-[12px] font-semibold text-on-brand outline-none transition-colors hover:bg-brand-deep focus-visible:ring-2 focus-visible:ring-accent disabled:cursor-not-allowed disabled:bg-brand/40"
-          >
-            {downloading ? (
-              <>
-                <LoaderCircle size={16} className="animate-spin" aria-hidden="true" />
-                Baixando…
-              </>
-            ) : (
-              <>
-                <Download size={16} aria-hidden="true" />
-                Baixar
-              </>
-            )}
-          </button>
+          <div className="flex shrink-0 flex-wrap gap-2.5">
+            <button
+              type="button"
+              onClick={() => void handlePreview()}
+              disabled={!proposal.downloadable || loadingPreview}
+              aria-expanded={previewUrl !== null}
+              className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-[10px] border border-brand/25 bg-transparent px-5 py-3 text-[12px] font-semibold text-brand outline-none transition-colors hover:bg-brand-soft/60 focus-visible:ring-2 focus-visible:ring-accent disabled:cursor-not-allowed disabled:border-line disabled:text-ink-soft/50"
+            >
+              {loadingPreview ? (
+                <>
+                  <LoaderCircle size={16} className="animate-spin" aria-hidden="true" />
+                  Abrindo…
+                </>
+              ) : previewUrl ? (
+                <>
+                  <EyeOff size={16} aria-hidden="true" />
+                  Ocultar
+                </>
+              ) : (
+                <>
+                  <Eye size={16} aria-hidden="true" />
+                  Visualizar
+                </>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => void handleDownload()}
+              disabled={!proposal.downloadable || downloading}
+              className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-[10px] bg-brand px-5 py-3 text-[12px] font-semibold text-on-brand outline-none transition-colors hover:bg-brand-deep focus-visible:ring-2 focus-visible:ring-accent disabled:cursor-not-allowed disabled:bg-brand/40"
+            >
+              {downloading ? (
+                <>
+                  <LoaderCircle size={16} className="animate-spin" aria-hidden="true" />
+                  Baixando…
+                </>
+              ) : (
+                <>
+                  <Download size={16} aria-hidden="true" />
+                  Baixar
+                </>
+              )}
+            </button>
+          </div>
         </div>
+
       </section>
+
+      {/* fora do card: o card é flex com overflow-hidden, e o iframe dentro
+          dele empurrava a linha de botões para fora da área visível */}
+      {previewUrl && (
+        <section className="overflow-hidden rounded-[14px] border border-line bg-card p-3 sm:p-4">
+          <iframe
+            src={previewUrl}
+            title={`Visualização de ${fileName}`}
+            className="block h-[70vh] min-h-[420px] w-full rounded-[10px] border border-line bg-paper"
+          />
+          <p className="mt-2.5 text-center text-[10.5px] text-ink-soft">
+            Não consegue ver o documento? Alguns navegadores de celular não
+            exibem PDF na página — use o botão Baixar.
+          </p>
+        </section>
+      )}
 
       {!proposal.downloadable && (
         <section className="flex items-start gap-2.5 rounded-[10px] border border-line bg-card px-5 py-4">
