@@ -55,12 +55,16 @@ const config: AppConfig = {
     proposalsDir: process.env.PROPOSALS_DIR?.trim()
       ? path.resolve(process.cwd(), process.env.PROPOSALS_DIR.trim())
       : '',
+    // trim em tudo: estes valores são colados à mão no painel do Railway, e um
+    // espaço ou quebra de linha invisível no fim da chave entra no cálculo da
+    // assinatura e devolve InvalidArgument (HTTP 400) — erro que parece
+    // credencial errada e não é
     r2: {
-      endpoint: envStr('R2_ENDPOINT', ''),
-      bucket: envStr('R2_BUCKET', ''),
-      prefix: envStr('R2_PREFIX', 'propostas').replace(/^\/+|\/+$/g, ''),
-      accessKeyId: envStr('R2_ACCESS_KEY_ID', ''),
-      secretAccessKey: envStr('R2_SECRET_ACCESS_KEY', ''),
+      endpoint: envStr('R2_ENDPOINT', '').trim(),
+      bucket: envStr('R2_BUCKET', '').trim(),
+      prefix: envStr('R2_PREFIX', 'propostas').trim().replace(/^\/+|\/+$/g, ''),
+      accessKeyId: envStr('R2_ACCESS_KEY_ID', '').trim(),
+      secretAccessKey: envStr('R2_SECRET_ACCESS_KEY', '').trim(),
     },
   },
   db: {
