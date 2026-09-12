@@ -1,7 +1,6 @@
 import { animate, motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import type { RemixiconComponentType } from '../../icons';
-import { formatNumber } from '../../lib/format';
 import { EASE, riseIn } from '../../lib/motion';
 import { INNER_CARD } from '../Card';
 
@@ -12,24 +11,38 @@ import { INNER_CARD } from '../Card';
  */
 
 /**
+ * Casas decimais do próprio valor, no máximo 2 — que é a precisão com que a
+ * API devolve área em hectares. Sem isso o contador arredondava tudo para
+ * inteiro e a página pública mostrava 18 ha onde o painel mostrava 17,57.
+ */
+function casasDecimais(value: number): number {
+  if (Number.isInteger(value)) return 0;
+  const fracao = String(value).split('.')[1] ?? '';
+  return Math.min(fracao.length, 2);
+}
+
+/**
  * Número que conta de 0 até o valor quando `started` liga (a seção entrou na
  * viewport). Sem dado (API fora) mostra "n/d" em vez de zero enganoso.
  */
 export function CountUp({ value, started }: { value: number | null; started: boolean }) {
   const [n, setN] = useState(0);
+  const casas = value === null ? 0 : casasDecimais(value);
 
   useEffect(() => {
     if (!started || value === null) return;
+    const fator = 10 ** casas;
     const controls = animate(0, value, {
       duration: 1.3,
       ease: EASE,
-      onUpdate: (v) => setN(Math.round(v)),
+      onUpdate: (v) => setN(Math.round(v * fator) / fator),
     });
     return () => controls.stop();
-  }, [value, started]);
+  }, [value, started, casas]);
 
   if (value === null) return <>n/d</>;
-  return <>{formatNumber(n)}</>;
+  // casas fixas durante a animação: sem isso a largura do número oscila
+  return <>{n.toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas })}</>;
 }
 
 /** Tile centrado de resultado (ícone e número na mesma linha, rótulo abaixo). */
