@@ -131,7 +131,7 @@ function ModalityRows({ modalities }: { modalities: IndicatorModality[] }) {
 }
 
 export default function OverviewIndicators({ data }: { data: IndicatorsResponse }) {
-  const { program, land, payments, carbon } = data;
+  const { program, land, carbon } = data;
 
   return (
     <div className="mt-5 space-y-5">
@@ -208,25 +208,6 @@ export default function OverviewIndicators({ data }: { data: IndicatorsResponse 
             aprovação do relatório de monitoramento.
           </div>
 
-          <div className="mb-6 grid grid-cols-2 divide-x divide-line border-y border-line py-4">
-            <div className="pr-5">
-              <div className="font-display text-[28px] font-semibold leading-none text-ink">
-                {formatNumber(payments.executedInstallments)}
-              </div>
-              <div className="mt-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-ink-soft">
-                marcadas como executadas
-              </div>
-            </div>
-            <div className="pl-5">
-              <div className="font-display text-[28px] font-semibold leading-none text-ink">
-                {formatNumber(payments.paidInstallments)}
-              </div>
-              <div className="mt-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-ink-soft">
-                marcadas como pagas
-              </div>
-            </div>
-          </div>
-
           <div className="space-y-4">
             <ResourceLine
               label="Recurso planejado"
@@ -240,13 +221,6 @@ export default function OverviewIndicators({ data }: { data: IndicatorsResponse 
               total={program.plannedResource}
               color="bg-accent"
             />
-          </div>
-
-          <div className="mt-5 flex items-baseline justify-between border-t border-line pt-4 text-[12px]">
-            <span className="text-ink-soft">Valor pago registrado</span>
-            <span className="font-semibold text-ink">
-              {formatCurrency(payments.recordedPaidAmount)}
-            </span>
           </div>
         </motion.section>
 
