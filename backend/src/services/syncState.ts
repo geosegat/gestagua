@@ -136,11 +136,11 @@ export function start(trigger: SyncTrigger): SyncState {
 }
 
 /** Uma linha de progresso do worker. Ignorada se não há run em andamento. */
-export function appendLog(message: string): SyncState {
+export function appendLog(message: string, step?: string): SyncState {
   const state = current();
   if (state.status !== 'running') return state;
 
-  const line: SyncLogLine = { at: new Date().toISOString(), message };
+  const line: SyncLogLine = { at: new Date().toISOString(), message, step };
   const next: SyncState = {
     ...state,
     logs: [...state.logs, line].slice(-MAX_LOGS),

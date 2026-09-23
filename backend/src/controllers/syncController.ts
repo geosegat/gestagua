@@ -44,7 +44,12 @@ export function event(
     case 'log': {
       const message = typeof body.message === 'string' ? body.message.trim() : '';
       if (!message) return res.status(400).json({ erro: 'log sem message' });
-      return res.json(syncState.appendLog(message.slice(0, 300)));
+      // etapa é um identificador curto (download, publish...); fora disso, ignora
+      const step =
+        typeof body.step === 'string' && /^[a-z_]{1,32}$/.test(body.step)
+          ? body.step
+          : undefined;
+      return res.json(syncState.appendLog(message.slice(0, 300), step));
     }
 
     case 'finish':

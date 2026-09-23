@@ -14,6 +14,8 @@ export interface SyncLastRun {
 export interface SyncLogLine {
   at: string;
   message: string;
+  /** Etapa do worker (download, publish, check); ausente nas linhas da API. */
+  step?: string;
 }
 
 export interface SyncState {

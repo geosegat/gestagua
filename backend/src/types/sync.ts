@@ -16,6 +16,11 @@ export interface SyncLastRun {
 export interface SyncLogLine {
   at: string;
   message: string;
+  /**
+   * Etapa do worker (download, publish, check). O painel mostra o passo pelo
+   * nome da etapa; a mensagem é técnica e fica pro registro.
+   */
+  step?: string;
 }
 
 export interface SyncState {
@@ -40,4 +45,6 @@ export interface SyncEventBody {
   error?: string;
   /** Texto da linha de progresso quando event === 'log'. */
   message?: string;
+  /** Etapa da linha de progresso (ver SyncLogLine.step). */
+  step?: string;
 }
