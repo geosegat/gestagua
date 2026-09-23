@@ -6,6 +6,7 @@ import type {
   IndicatorCarbonCultureRow,
   IndicatorModalityRow,
   IndicatorPaymentsRow,
+  IndicatorProgramResourcesRow,
   IndicatorProjectCountRow,
   IndicatorYearRow,
   Numeric,
@@ -27,6 +28,11 @@ function number(value: Numeric): number {
 
 function decimal(value: Numeric): number {
   return Math.round(number(value) * 100) / 100;
+}
+
+// campo vazio segue null (a tela mostra "Não preenchido"), nunca vira 0
+function optionalDecimal(value: Numeric | undefined): number | null {
+  return value === null || value === undefined ? null : decimal(value);
 }
 
 export async function summary(
@@ -66,6 +72,7 @@ export async function summary(
     modalitiesQuery,
     paymentsQuery,
     carbonQuery,
+    resourcesQuery,
   ] = await Promise.all([
     db.query<IndicatorProjectCountRow>(
       `${activeProjectsCte}
@@ -197,6 +204,14 @@ export async function summary(
        ORDER BY c.name`,
       params,
     ),
+    // recurso planejado e executado vêm do cadastro do programa, então não
+    // mudam com o filtro de ano
+    db.query<IndicatorProgramResourcesRow>(
+      `SELECT "plannedResource", "executedResource"
+       FROM programs
+       WHERE id = $1`,
+      [config.gestaguaProgramId],
+    ),
   ]);
 
   const modalities = modalitiesQuery.rows.map((row) => ({
@@ -219,6 +234,7 @@ export async function summary(
   const totalImplementations = areaImplementations;
 
   const payment = paymentsQuery.rows[0];
+  const resources = resourcesQuery.rows[0];
   const cultures = carbonQuery.rows.map((row) => ({
     id: row.id,
     name: row.name,
@@ -249,6 +265,8 @@ export async function summary(
     program: {
       id: config.gestaguaProgramId,
       name: 'Gestagua',
+      plannedResource: optionalDecimal(resources?.plannedResource),
+      executedResource: optionalDecimal(resources?.executedResource),
     },
     dataSource: getCurrentDb(),
     filters: {

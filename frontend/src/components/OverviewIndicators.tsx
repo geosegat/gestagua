@@ -30,26 +30,33 @@ function AreaValue({
   return <>{formatNumber(value)} ha</>;
 }
 
-function ProgressLine({
+function ResourceLine({
   label,
   value,
   total,
   color,
 }: {
   label: string;
-  value: number;
-  total: number;
+  value: number | null;
+  /** base da barra; sem ela (planejado vazio) mostra só o valor */
+  total: number | null;
   color: string;
 }) {
-  const percentage = total > 0 ? Math.min(100, (value / total) * 100) : 0;
+  const percentage =
+    value !== null && total ? Math.min(100, (value / total) * 100) : 0;
 
   return (
     <div>
       <div className="mb-1.5 flex items-baseline justify-between gap-3 text-[12.5px]">
         <span className="font-medium text-ink">{label}</span>
-        <span className="text-ink-soft">
-          {formatNumber(value)} de {formatNumber(total)}
-        </span>
+        {value === null ? (
+          <span className="font-medium text-warn">Não preenchido</span>
+        ) : (
+          <span className="text-ink-soft">
+            {formatCurrency(value)}
+            {total !== null && ` de ${formatCurrency(total)}`}
+          </span>
+        )}
       </div>
       <div className="h-1.5 overflow-hidden rounded-full bg-line/60">
         <motion.div
@@ -124,7 +131,7 @@ function ModalityRows({ modalities }: { modalities: IndicatorModality[] }) {
 }
 
 export default function OverviewIndicators({ data }: { data: IndicatorsResponse }) {
-  const { land, payments, carbon } = data;
+  const { program, land, payments, carbon } = data;
 
   return (
     <div className="mt-5 space-y-5">
@@ -185,8 +192,8 @@ export default function OverviewIndicators({ data }: { data: IndicatorsResponse 
             <WalletCards size={22} className="shrink-0 text-brand" />
           </div>
 
-          {/* recurso total do programa (valor oficial da prefeitura) no topo,
-              pra dar contexto aos valores reais de execução/pagamento abaixo */}
+          {/* recurso total do programa (valor oficial da prefeitura) no topo:
+              é a base da barra do recurso planejado, mais abaixo */}
           <div className="mb-5 border-b border-line pb-5">
             <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-soft">
               Recurso total do programa
@@ -221,16 +228,16 @@ export default function OverviewIndicators({ data }: { data: IndicatorsResponse 
           </div>
 
           <div className="space-y-4">
-            <ProgressLine
-              label="Execução registrada"
-              value={payments.executedInstallments}
-              total={payments.totalInstallments}
+            <ResourceLine
+              label="Recurso planejado"
+              value={program.plannedResource}
+              total={RECURSO_TOTAL_REAIS}
               color="bg-brand"
             />
-            <ProgressLine
-              label="Pagamento registrado"
-              value={payments.paidInstallments}
-              total={payments.totalInstallments}
+            <ResourceLine
+              label="Recurso executado"
+              value={program.executedResource}
+              total={program.plannedResource}
               color="bg-accent"
             />
           </div>

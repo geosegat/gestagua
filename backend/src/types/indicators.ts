@@ -32,6 +32,11 @@ export interface IndicatorPaymentsRow extends QueryResultRow {
   paidAmountFilled: number;
 }
 
+export interface IndicatorProgramResourcesRow extends QueryResultRow {
+  plannedResource: Numeric;
+  executedResource: Numeric;
+}
+
 export interface IndicatorCarbonCultureRow extends QueryResultRow {
   id: string;
   name: string;

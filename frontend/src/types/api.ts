@@ -342,6 +342,9 @@ export interface IndicatorsResponse {
   program: {
     id: string;
     name: string;
+    /** Recursos do cadastro do programa, em reais; null = não preenchido. */
+    plannedResource: number | null;
+    executedResource: number | null;
   };
   dataSource: string;
   filters: {
