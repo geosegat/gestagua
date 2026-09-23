@@ -4,7 +4,7 @@
 #  Atualiza o site: baixa os dados do Azure e publica na Railway.
 #  Dois passos, so isso: nao passa pelo banco local da VPS.
 #
-#      Azure (mvgi_stage)  --pg_dump-->  arquivo  --pg_restore-->  Railway
+#      Azure (arvo_stage)  --pg_dump-->  arquivo  --pg_restore-->  Railway
 #
 #  A cada etapa ele avisa a API (POST /admin/sync event=log), e o painel
 #  mostra o progresso ao vivo. A VPS so faz chamadas de SAIDA.

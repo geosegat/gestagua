@@ -3,7 +3,7 @@
 Como os dados do GestAgua chegam no site.
 
 ```text
-Azure (mvgi_stage)  --pg_dump-->  arquivo  --pg_restore-->  Railway
+Azure (arvo_stage)  --pg_dump-->  arquivo  --pg_restore-->  Railway
                     \___________ sync-worker.ps1, na VPS ___________/
 ```
 
@@ -46,6 +46,39 @@ a VPS esta fora da rede da Railway. Nao coloque esses valores no Git nem no
 > entre 24/07/2026 e 08/09/2026, seis semanas sem ninguem perceber. Ao trocar a
 > chave, troque nos tres lugares.
 
+## Trocar o banco de origem
+
+O banco que o worker copia vem so do `GESTAGUA_AZURE_URL`. Em 09/2026 a origem
+passou de `mvgi_stage` para `arvo_stage`, no mesmo servidor. Se mudar de novo so
+o nome, na VPS, num PowerShell como administrador:
+
+```powershell
+[Environment]::SetEnvironmentVariable('GESTAGUA_AZURE_URL', ([Environment]::GetEnvironmentVariable('GESTAGUA_AZURE_URL','Machine') -replace 'arvo_stage','NOVO_BANCO'), 'Machine')
+```
+
+O usuario do dump (`arvo_dump`) precisa de leitura no banco novo, em **todos**
+os schemas que o `pg_dump` copia (em 09/2026, `public` e `portal_stage`). Rode
+no banco novo, logado com o dono das tabelas:
+
+```sql
+GRANT USAGE ON SCHEMA public, portal_stage TO arvo_dump;
+GRANT SELECT ON ALL TABLES IN SCHEMA public, portal_stage TO arvo_dump;
+GRANT SELECT ON ALL SEQUENCES IN SCHEMA public, portal_stage TO arvo_dump;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public, portal_stage GRANT SELECT ON TABLES TO arvo_dump;
+```
+
+Sem isso o painel mostra so "pg_dump do Azure falhou (codigo 1)". O motivo real
+(`permission denied for table ...`) so aparece rodando o worker na mao. Passe o
+valor novo direto, porque uma janela aberta antes da troca ainda enxerga o antigo:
+
+```powershell
+& "C:\arvo-sync\sync-worker.ps1" -Force -AzureUrl ([Environment]::GetEnvironmentVariable('GESTAGUA_AZURE_URL','Machine'))
+```
+
+O teste que vale e o botao "Atualizar dados": ele roda pela tarefa agendada, o
+mesmo caminho do sync diario. Na troca de 09/2026 a tarefa enxergou o valor novo
+sem reiniciar a VPS.
+
 ## Tarefas agendadas
 
 Duas tarefas, com papeis diferentes:
@@ -68,6 +101,10 @@ schtasks /create /f /tn "GestaguaSyncDiario" /sc daily /st 04:30 /ru SYSTEM /rl 
   `ArvoCloneBanco`, que roda por volta das 04:00.
 
 Ambas rodam como `SYSTEM`, que enxerga as variaveis de escopo Machine.
+
+Os horarios sao do relogio da VPS, que nao esta no horario de Brasilia (em
+09/2026, 4h atras). As 04:30 do `GestaguaSyncDiario` caem as 08:30 de Brasilia,
+em horario de expediente.
 
 Conferir:
 

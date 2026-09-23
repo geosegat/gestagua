@@ -152,7 +152,7 @@ os dados do Azure e publica direto na Railway — dois passos, sem passar pelo
 banco local da VPS:
 
 ```
-Azure (mvgi_stage) --pg_dump--> arquivo --pg_restore--> Railway --> API
+Azure (arvo_stage) --pg_dump--> arquivo --pg_restore--> Railway --> API
 ```
 
 A VPS só faz chamadas de **saída** (Azure, Railway e a própria API), então não
