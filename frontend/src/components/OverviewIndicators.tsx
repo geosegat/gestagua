@@ -132,6 +132,7 @@ function ModalityRows({ modalities }: { modalities: IndicatorModality[] }) {
 
 export default function OverviewIndicators({ data }: { data: IndicatorsResponse }) {
   const { program, land, carbon } = data;
+  const plannedResource = program.plannedResource ?? RECURSO_TOTAL_REAIS;
 
   return (
     <div className="mt-5 space-y-5">
@@ -192,14 +193,14 @@ export default function OverviewIndicators({ data }: { data: IndicatorsResponse 
             <WalletCards size={22} className="shrink-0 text-brand" />
           </div>
 
-          {/* recurso total do programa (valor oficial da prefeitura) no topo:
-              é a base da barra do recurso planejado, mais abaixo */}
+          {/* recurso planejado no topo: é a base da barra do executado, mais abaixo.
+              sem valor no banco, cai no valor oficial da prefeitura */}
           <div className="mb-5 border-b border-line pb-5">
             <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-soft">
-              Recurso total do programa
+              Recurso planejado do programa
             </div>
             <div className="mt-1.5 font-display text-[30px] font-semibold leading-none text-brand-deep">
-              {formatCurrency(RECURSO_TOTAL_REAIS)}
+              {formatCurrency(plannedResource)}
             </div>
           </div>
 
@@ -208,20 +209,12 @@ export default function OverviewIndicators({ data }: { data: IndicatorsResponse 
             aprovação do relatório de monitoramento.
           </div>
 
-          <div className="space-y-4">
-            <ResourceLine
-              label="Recurso planejado"
-              value={program.plannedResource}
-              total={RECURSO_TOTAL_REAIS}
-              color="bg-brand"
-            />
-            <ResourceLine
-              label="Recurso executado"
-              value={program.executedResource}
-              total={program.plannedResource}
-              color="bg-accent"
-            />
-          </div>
+          <ResourceLine
+            label="Recurso executado"
+            value={program.executedResource}
+            total={plannedResource}
+            color="bg-accent"
+          />
         </motion.section>
 
         <motion.section
