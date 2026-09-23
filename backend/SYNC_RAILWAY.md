@@ -57,19 +57,44 @@ o nome, na VPS, num PowerShell como administrador:
 ```
 
 O usuario do dump (`arvo_dump`) precisa de leitura no banco novo, em **todos**
-os schemas que o `pg_dump` copia (em 09/2026, `public` e `portal_stage`). Rode
-no banco novo, logado com o dono das tabelas:
+os schemas que o `pg_dump` copia (em 09/2026, `public` e `portal_stage`), e nas
+tabelas **e** sequences. Rode no banco novo, logado como `admin_pg_mvgi`, o
+dono das tabelas:
 
 ```sql
 GRANT USAGE ON SCHEMA public, portal_stage TO arvo_dump;
 GRANT SELECT ON ALL TABLES IN SCHEMA public, portal_stage TO arvo_dump;
 GRANT SELECT ON ALL SEQUENCES IN SCHEMA public, portal_stage TO arvo_dump;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public, portal_stage GRANT SELECT ON TABLES TO arvo_dump;
+ALTER DEFAULT PRIVILEGES FOR ROLE admin_pg_mvgi GRANT USAGE ON SCHEMAS TO arvo_dump;
+ALTER DEFAULT PRIVILEGES FOR ROLE admin_pg_mvgi GRANT SELECT ON TABLES TO arvo_dump;
+ALTER DEFAULT PRIVILEGES FOR ROLE admin_pg_mvgi GRANT SELECT ON SEQUENCES TO arvo_dump;
+```
+
+As tres ultimas fazem o que o `admin_pg_mvgi` criar depois (schema, tabela ou
+sequence, em qualquer schema) ja nascer legivel pro `arvo_dump`. Na troca de
+09/2026 a primeira versao deste passo cobria so tabelas, e na mesma tarde tres
+sequences de tabelas novas do `portal_stage` derrubaram o sync. Se outro usuario
+passar a criar objetos no banco, repita as tres com `FOR ROLE` dele.
+
+Para achar o que o `arvo_dump` nao consegue ler (vazio = tudo certo):
+
+```sql
+SELECT n.nspname AS schema, c.relname AS tabela, pg_get_userbyid(c.relowner) AS dono,
+       has_schema_privilege('arvo_dump', n.oid, 'USAGE') AS usa_schema
+FROM pg_class c
+JOIN pg_namespace n ON n.oid = c.relnamespace
+WHERE n.nspname NOT IN ('pg_catalog', 'information_schema')
+  AND n.nspname NOT LIKE 'pg\_%'
+  AND c.relkind IN ('r', 'p', 'v', 'm', 'f', 'S')
+  AND (NOT has_table_privilege('arvo_dump', c.oid, 'SELECT')
+       OR NOT has_schema_privilege('arvo_dump', n.oid, 'USAGE'))
+ORDER BY 1, 2;
 ```
 
 Sem isso o painel mostra so "pg_dump do Azure falhou (codigo 1)". O motivo real
-(`permission denied for table ...`) so aparece rodando o worker na mao. Passe o
-valor novo direto, porque uma janela aberta antes da troca ainda enxerga o antigo:
+(`permission denied for table ...` ou `for sequence ...`) so aparece rodando o
+worker na mao. Passe o valor novo direto, porque uma janela aberta antes da
+troca ainda enxerga o antigo:
 
 ```powershell
 & "C:\arvo-sync\sync-worker.ps1" -Force -AzureUrl ([Environment]::GetEnvironmentVariable('GESTAGUA_AZURE_URL','Machine'))
